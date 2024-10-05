@@ -1,4 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+use tauri_plugin_deep_link::DeepLinkExt;
+use url::Url;
+use url::Host;
 use futures_util::{SinkExt, StreamExt};
 use once_cell::sync::Lazy;
 use std::env;
@@ -105,6 +108,21 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle();
             create_containers_conf(app.handle())?;
+
+            let webview_window = app.get_webview_window("main").unwrap();
+            
+            app.deep_link().on_open_url(move |event| {
+                let url = &event.urls()[0];
+                let host = url.host().unwrap();
+                let path = url.path();
+    
+                if let Host::Domain(domain) = host {
+                    let urls = format!("https://hub.ppts.ai/packages/{}{}", domain,path);
+                    let mut webview_window_clone = webview_window.clone();
+                    let _ = webview_window_clone.navigate(Url::parse(&urls).unwrap());
+                }
+
+            });
 
             // Get the autostart manager
             let autostart_manager = app.autolaunch();
