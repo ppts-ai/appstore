@@ -15,6 +15,7 @@
 */
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react';
+import { FormattedMessage } from 'react-intl';
 
 export default function Home() {
   const [products] = useState<any>([]);
@@ -28,7 +29,7 @@ export default function Home() {
 
       <main className="pb-24">
         <div className="px-4 py-16 text-center sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Apps</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900"><FormattedMessage id="home.title" /></h1>
         </div>
 
 

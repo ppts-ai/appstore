@@ -1,4 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
+import { useLocale } from '@/hooks/LocaleContext';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 function classNames(...classes: any[]) {
@@ -6,7 +8,7 @@ function classNames(...classes: any[]) {
 }
 
 const Layout = () => {
-
+  const { locale, setLocale } = useLocale();
   return (
 
 
@@ -33,7 +35,18 @@ const Layout = () => {
            >
              Explore
            </Link>
-        
+           <Select onValueChange={(value)=>setLocale(value)} value={locale}>
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Select a fruit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Language</SelectLabel>
+          <SelectItem value="en">English</SelectItem>
+          <SelectItem value="fr">Français</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
         </nav>
       </div>
 
