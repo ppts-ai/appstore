@@ -1,7 +1,4 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-use tauri_plugin_deep_link::DeepLinkExt;
-use url::Url;
-use url::Host;
 use futures_util::{SinkExt, StreamExt};
 use once_cell::sync::Lazy;
 use std::env;
@@ -19,11 +16,14 @@ use tauri::{
 };
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 use tokio::net::TcpListener;
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::Message;
+use url::Host;
+use url::Url;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -103,25 +103,43 @@ pub fn run() {
 
     builder
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_log::Builder::new()
+        .target(tauri_plugin_log::Target::new(
+          tauri_plugin_log::TargetKind::LogDir {
+            file_name: Some("logs".to_string()),
+          },
+        ))
+        .max_file_size(999_000 /* bytes */)
+        .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+        .build())
         .plugin(tauri_plugin_fs::init())
+        .register_uri_scheme_protocol("ppts", |app, request| {
+            let path = request.uri().to_string().replace("ppts://", "");
+            println!("handle ppt {}", path);
+            // Return 404 if file is not found
+            tauri::http::Response::builder()
+                .status(302)
+                .header("Location", "/init")
+                .body(vec![])
+                .unwrap()
+        })
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
             create_containers_conf(app.handle())?;
 
             let webview_window = app.get_webview_window("main").unwrap();
-            
+
             app.deep_link().on_open_url(move |event| {
                 let url = &event.urls()[0];
                 let host = url.host().unwrap();
                 let path = url.path();
-    
+
                 if let Host::Domain(domain) = host {
-                    let urls = format!("https://hub.ppts.ai/packages/{}{}", domain,path);
+                    let urls = format!("tauri://localhost/install?app={}&url={}", domain, path);
                     let mut webview_window_clone = webview_window.clone();
                     let _ = webview_window_clone.navigate(Url::parse(&urls).unwrap());
                 }
-
             });
 
             // Get the autostart manager

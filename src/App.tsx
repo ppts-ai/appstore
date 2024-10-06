@@ -5,6 +5,8 @@ import NoPage from "./pages/NoPage";
 import { LocaleProvider, useLocale } from '@/hooks/LocaleContext';
 import { useEffect, useState } from "react";
 import { IntlProvider } from "react-intl";
+import InstallPage from "./pages/Install";
+import InitalizePage from "./pages/Initalize";
 
 // Define a type for the message files
 type Messages = {
@@ -54,7 +56,8 @@ const AppWithLocale = () => {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
-            <Route path="init" element={<NoPage />} />
+            <Route path="init" element={<InitalizePage />} />
+            <Route path="install" element={<InstallPage />} />
             <Route path="*" element={<NoPage />} />
           </Route>
         </Routes>
