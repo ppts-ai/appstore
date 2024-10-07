@@ -1,6 +1,12 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 use futures_util::{SinkExt, StreamExt};
 use once_cell::sync::Lazy;
+use serde_json::Value;
+use std::collections::HashMap;
+use std::path::Path;
+use std::io::copy;
+use reqwest::blocking::get;
+use std::error::Error;
 use std::env;
 use std::fs::{self, File};
 use std::sync::Mutex;
@@ -28,6 +34,90 @@ use url::Url;
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+
+
+#[tauri::command]
+fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) {
+    println!("Key: {}, Value: {}", appName, icon);
+    let map: HashMap<String, Value> = serde_json::from_str(data).unwrap();
+
+    for (key, value) in &map {
+        println!("Key: {}, Value: {}", key, value);
+    }
+
+        let app_path = app
+            .path()
+            .resolve(format!("apps/{}", appName), BaseDirectory::AppData)
+            .unwrap();
+        // Use result as needed
+        let mut result = 0;
+        let path = Path::new(&app_path);
+    
+        // Check if the directory exists, and create it if it doesn't
+        if !path.exists() {
+            fs::create_dir_all(path);
+            println!("Directory created: {:?}", path);
+        } else {
+            println!("Directory already exists: {:?}", path);
+        }
+
+        let logo_path = app
+        .path()
+        .resolve(format!("apps/{}/icon.png",appName), BaseDirectory::AppData)
+        .unwrap();
+        download_image(icon, logo_path.as_path());
+
+        if let Some(form) = map.get("form") {
+            // Serialize the struct to a JSON string
+            let json_data = serde_json::to_string_pretty(&form).unwrap();
+
+            let form_file = app
+            .path()
+            .resolve(format!("apps/{}/form.json",appName), BaseDirectory::AppData)
+            .unwrap();
+
+            // Write the JSON data to the file
+            fs::write(&form_file, json_data);
+        }
+
+        if let Some(compose) = map.get("compose") {
+            // Serialize the struct to a JSON string
+            let yaml_data = serde_yaml::to_string(&compose).unwrap();
+
+            let yaml_file = app
+            .path()
+            .resolve(format!("apps/{}/docker-compose.yaml",appName), BaseDirectory::AppData)
+            .unwrap();
+
+            // Write the JSON data to the file
+            fs::write(&yaml_file, yaml_data);
+        }
+
+
+    
+    let webview_window = app.get_webview_window("main").unwrap();
+            
+    let urls = format!("tauri://localhost/app?name={}", "app_name");
+    let mut webview_window_clone = webview_window.clone();
+    let _ = webview_window_clone.navigate(Url::parse(&urls).unwrap());
+
+}
+
+
+fn download_image(url: &str, path: &Path) -> Result<(), Box<dyn Error>> {
+    // Send a GET request to download the image
+    let response = get(url)?;
+
+    // Open a file at the specified path
+    let mut file = File::create(path)?;
+
+    // Copy the image from the response body into the file
+    let mut content = response.bytes()?;
+    copy(&mut content.as_ref(), &mut file)?;
+
+    Ok(())
 }
 
 fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> {
@@ -113,16 +203,6 @@ pub fn run() {
         .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
         .build())
         .plugin(tauri_plugin_fs::init())
-        .register_uri_scheme_protocol("ppts", |app, request| {
-            let path = request.uri().to_string().replace("ppts://", "");
-            println!("handle ppt {}", path);
-            // Return 404 if file is not found
-            tauri::http::Response::builder()
-                .status(302)
-                .header("Location", "/init")
-                .body(vec![])
-                .unwrap()
-        })
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
@@ -134,9 +214,9 @@ pub fn run() {
                 let url = &event.urls()[0];
                 let host = url.host().unwrap();
                 let path = url.path();
-
+    
                 if let Host::Domain(domain) = host {
-                    let urls = format!("tauri://localhost/install?app={}&url={}", domain, path);
+                    let urls = format!("https://hub.ppts.ai/packages/{}{}", domain,path);
                     let mut webview_window_clone = webview_window.clone();
                     let _ = webview_window_clone.navigate(Url::parse(&urls).unwrap());
                 }
@@ -244,7 +324,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![greet,install])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
