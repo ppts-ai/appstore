@@ -36,8 +36,6 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-
-
 #[tauri::command]
 fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) {
     println!("Key: {}, Value: {}", appName, icon);
@@ -95,14 +93,11 @@ fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) {
             fs::write(&yaml_file, yaml_data);
         }
 
-
-    
-    let webview_window = app.get_webview_window("main").unwrap();
-            
-    let urls = format!("tauri://localhost/app?name={}", "app_name");
-    let mut webview_window_clone = webview_window.clone();
-    let _ = webview_window_clone.navigate(Url::parse(&urls).unwrap());
-
+        let webview_window =
+        tauri::WebviewWindowBuilder::new(&app, appName, tauri::WebviewUrl::External(url::Url::parse(format!("http://localhost:{}",1420).as_str()).unwrap()))
+            .inner_size(800.0, 600.0)
+            .title(appName)
+            .build();
 }
 
 
