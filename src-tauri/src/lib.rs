@@ -93,12 +93,12 @@ async fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) -
             // Write the JSON data to the file
             fs::write(&yaml_file, yaml_data);
         }
-        let name = appName;
-        let webview_window =
-        tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(format!("http://localhost:{}",1420).as_str()).unwrap()))
-            .inner_size(800.0, 600.0)
-            .title(name)
-            .build();
+
+        let webview_window = app.get_webview_window("main").unwrap();
+            
+        let urls = format!("tauri://localhost/app?name={}", appName);
+        let mut webview_window_clone = webview_window.clone();
+        let _ = webview_window_clone.navigate(Url::parse(&urls).unwrap());
 
         Ok(())
         
@@ -181,7 +181,7 @@ fn replace_alias(command: &str) -> &str {
 async fn open_window(app: tauri::AppHandle, name: &str) -> Result<(), String> {
     println!("open new window {}", name);
     let webview_window =
-    tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(format!("http://localhost:{}",1420).as_str()).unwrap()))
+    tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(format!("tauri://localhost/app?name={}",name).as_str()).unwrap()))
         .inner_size(800.0, 600.0)
         .title(name)
         .build();
