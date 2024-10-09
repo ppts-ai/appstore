@@ -40,6 +40,7 @@ const InitalizePage = () => {
   
     return (
       <>
+      <h2>The container environment need to be initialized before installing application</h2>
       <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-7xl sm:px-6 lg:px-8">
    

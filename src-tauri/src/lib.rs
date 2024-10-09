@@ -1,5 +1,6 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 use futures_util::{SinkExt, StreamExt};
+use std::fs::read;
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -37,7 +38,7 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) {
+async fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) -> Result<(), String> {
     println!("Key: {}, Value: {}", appName, icon);
     let map: HashMap<String, Value> = serde_json::from_str(data).unwrap();
 
@@ -92,12 +93,15 @@ fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) {
             // Write the JSON data to the file
             fs::write(&yaml_file, yaml_data);
         }
-
+        let name = appName;
         let webview_window =
-        tauri::WebviewWindowBuilder::new(&app, appName, tauri::WebviewUrl::External(url::Url::parse(format!("http://localhost:{}",1420).as_str()).unwrap()))
+        tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(format!("http://localhost:{}",1420).as_str()).unwrap()))
             .inner_size(800.0, 600.0)
-            .title(appName)
+            .title(name)
             .build();
+
+        Ok(())
+        
 }
 
 
@@ -173,6 +177,42 @@ fn replace_alias(command: &str) -> &str {
     return command;
 }
 
+#[tauri::command]
+async fn open_window(app: tauri::AppHandle, name: &str) -> Result<(), String> {
+    println!("open new window {}", name);
+    let webview_window =
+    tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(format!("http://localhost:{}",1420).as_str()).unwrap()))
+        .inner_size(800.0, 600.0)
+        .title(name)
+        .build();
+    Ok(())
+}
+
+#[tauri::command]
+fn list_apps(app: tauri::AppHandle) -> String {
+    let file_path = app.path().resolve("apps", BaseDirectory::AppData).unwrap();
+    let mut subfolders = Vec::new();
+      
+    if file_path.exists() {
+        if (file_path.is_dir()) {
+            let dir = fs::read_dir(file_path).unwrap();
+            for entry in dir {
+                let entry = entry.unwrap();  // Unwrap the Result<DirEntry>
+                let path = entry.file_name();     // Call .path() on the DirEntry
+                let pathStr = path.to_string_lossy().to_string();
+                if pathStr.starts_with('.') {
+                }else {
+                    subfolders.push(pathStr);
+                }
+                
+            }
+            
+        }
+    }
+
+    return serde_json::to_string(&subfolders).unwrap();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default();
@@ -199,6 +239,23 @@ pub fn run() {
         .build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
+        .register_uri_scheme_protocol("appdata", |_ctx, request| {
+            let path = request.uri().to_string().replace("appdata://", "");
+            let file_path = _ctx.app_handle().path().resolve(path, BaseDirectory::AppData).unwrap();
+      
+            if file_path.exists() {
+                let file_bytes = read(file_path).unwrap();
+                let mime_type = "image/png";
+                return tauri::http::Response::builder()
+                    .header("Content-Type", mime_type.to_string())
+                    .body(file_bytes.into()).unwrap();
+            }
+      
+            // Return 404 if file is not found
+            tauri::http::Response::builder()
+              .status(404)
+              .body(vec![]).unwrap()
+          })
         .setup(|app| {
             let app_handle = app.handle();
             create_containers_conf(app.handle())?;
@@ -319,7 +376,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet,install])
+        .invoke_handler(tauri::generate_handler![greet,install,list_apps,open_window])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

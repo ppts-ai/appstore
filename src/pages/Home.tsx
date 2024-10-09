@@ -13,13 +13,33 @@
   }
   ```
 */
-import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { invoke } from '@tauri-apps/api/core';
+import {  useNavigate } from "react-router-dom";
 
 export default function Home() {
-  const [products] = useState<any>([]);
+  const [products, setProducts] = useState<any>([]);
+  const navigate = useNavigate();
+  const openWindow = (name: string) => {
+    invoke("open_window",{name});
+  };
   useEffect(() => {
+    invoke('list_apps', {}).then((value) => {
+      const data = JSON.parse(value as string);
+      console.log(data);
+      let items = (data as any[]).map((item,index) => {
+        return {
+          id: index,
+          name: item,
+          imageSrc: "appdata://apps/" + item + "/icon.png",
+          href: `/app?name=${item}`
+        };
+      })
+      console.log(items);
+      if(items.length == 0) navigate("/explore");
+      setProducts(items);
+      });
+   
 
   }, []);
 
@@ -27,9 +47,11 @@ export default function Home() {
   return (
     <div className="bg-white">
 
+
+
       <main className="pb-24">
         <div className="px-4 py-16 text-center sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900"><FormattedMessage id="home.title" /></h1>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Apps</h1>
         </div>
 
 
@@ -44,20 +66,20 @@ export default function Home() {
             {products.map((product: any) => (
               <div key={product.name} className="group relative border-b border-r border-gray-200 p-4 sm:p-6">
                 <div className="aspect-h-1 aspect-w-1 overflow-hidden rounded-lg bg-gray-200 group-hover:opacity-75">
-                <Link to={product.href}>
+                <a onDoubleClick={()=>openWindow(product.name)}>
                   <img
                     alt={product.imageAlt}
                     src={product.imageSrc}
                     className="h-full w-full object-cover object-center"
                   />
-                  </Link>
+                  </a>
                 </div>
                 <div className="pb-4 pt-10 text-center">
                   <h3 className="text-sm font-medium text-gray-900">
-                    <Link to={product.href}>
+                  <a onDoubleClick={()=>openWindow(product.name)}>
                       <span aria-hidden="true" className="absolute inset-0" />
                       {product.name}
-                    </Link>
+                    </a>
                   </h3>
                 </div>
               </div>
