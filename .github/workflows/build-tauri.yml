@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ['macos-13', 'macos-latest','windows-latest']
+        platform: ['windows-latest']
     runs-on: ${{ matrix.platform }}
 
 
@@ -61,8 +61,7 @@ jobs:
         $podmanPath = Get-Command "podman" | Select-Object -ExpandProperty Path
         Write-Host "Podman is installed at: $podmanPath"
         # Find Podman location
-        dir C:\ProgramData\Chocolatey\
-        dir C:\ProgramData\Chocolatey\bin
+        dir C:\ProgramData\chocolatey\lib\podman-cli\tools
         mkdir -p ./src-tauri/bin
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.2\usr\bin\podman.exe" -Destination "./src-tauri/bin/podman-x86_64-pc-windows-msvc.exe"
         touch "./src-tauri/bin/podman-mac-helper-x86_64-pc-windows-msvc.exe"
