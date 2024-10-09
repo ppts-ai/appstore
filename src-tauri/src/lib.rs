@@ -140,11 +140,11 @@ fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn s
             .resource_dir()
             .expect("Exec path not available");
         if cfg!(target_os = "windows") {
-            podman_dir = podman_dir.parent().unwrap().to_path_buf();
+
         } else if cfg!(target_os = "macos") {
             podman_dir = podman_dir.parent().unwrap().to_path_buf().join("MacOS");
         }
-
+        
         // Step 4: Create the containers.conf content
         let containers_conf_content = format!(
             "[engine]\nhelper_binaries_dir = [\"{}\"]\n",
