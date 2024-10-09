@@ -183,7 +183,7 @@ async fn open_window(app: tauri::AppHandle, name: &str, url: &str ) -> Result<()
     tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(url).unwrap()))
         .inner_size(800.0, 600.0)
         .title(name)
-        .resizable(true)
+        .proxy_url(url::Url::parse("socks5://51.75.126.150:19353").unwrap())
         .build();
     Ok(())
 }
