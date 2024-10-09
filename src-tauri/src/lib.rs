@@ -30,7 +30,6 @@ use tokio::net::TcpListener;
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::Message;
 use url::Host;
-use url::Url;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -98,7 +97,7 @@ async fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) -
             
         let urls = format!("tauri://localhost/app?name={}", appName);
         let mut webview_window_clone = webview_window.clone();
-        let _ = webview_window_clone.navigate(Url::parse(&urls).unwrap());
+        let _ = webview_window_clone.navigate(url::Url::parse(&urls).unwrap());
 
         Ok(())
         
@@ -178,12 +177,13 @@ fn replace_alias(command: &str) -> &str {
 }
 
 #[tauri::command]
-async fn open_window(app: tauri::AppHandle, name: &str) -> Result<(), String> {
+async fn open_window(app: tauri::AppHandle, name: &str, url: &str ) -> Result<(), String> {
     println!("open new window {}", name);
     let webview_window =
-    tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(format!("tauri://localhost/app?name={}",name).as_str()).unwrap()))
+    tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(url).unwrap()))
         .inner_size(800.0, 600.0)
         .title(name)
+        .resizable(true)
         .build();
     Ok(())
 }
@@ -270,7 +270,7 @@ pub fn run() {
                 if let Host::Domain(domain) = host {
                     let urls = format!("https://hub.ppts.ai/packages/{}{}", domain,path);
                     let mut webview_window_clone = webview_window.clone();
-                    let _ = webview_window_clone.navigate(Url::parse(&urls).unwrap());
+                    let _ = webview_window_clone.navigate(url::Url::parse(&urls).unwrap());
                 }
             });
 
