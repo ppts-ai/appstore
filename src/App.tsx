@@ -10,6 +10,7 @@ import InitalizePage from "./pages/Initalize";
 import AppPage from "./pages/AppPage";
 
 
+
 // Define a type for the message files
 type Messages = {
   [key: string]: string;
@@ -22,6 +23,7 @@ const AppWithLocale = () => {
   const { locale } = useLocale(); // Get the current locale from context
   const [messages, setMessages] = useState<Messages | null>(null); // State to store loaded messages
   const [loading, setLoading] = useState<boolean>(true); // Loading state
+
 
   // Load the correct messages file based on the locale
   const loadMessages = async (locale: string) => {

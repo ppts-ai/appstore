@@ -194,7 +194,7 @@ async fn open_window(app: tauri::AppHandle, name: &str, url: &str) -> Result<(),
     )
     .inner_size(800.0, 600.0)
     .title(name)
-    .proxy_url(url::Url::parse("socks5://51.75.126.150:19353").unwrap())
+    //.proxy_url(url::Url::parse("socks5://51.75.126.150:19353").unwrap())
     .build();
     Ok(())
 }
@@ -236,6 +236,7 @@ pub fn run() {
     }
 
     builder
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(

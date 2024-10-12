@@ -8,6 +8,7 @@
   "permissions": [
     "core:default",
     "shell:allow-open",
+    "store:default",
     "fs:default",
     "fs:allow-app-read-recursive",
     "fs:allow-exe-read-recursive",
@@ -23,6 +24,11 @@
           "args": true,
           "name": "bin/podman",
           "sidecar": true
+        },
+        {
+          "args": true,
+          "name": "wsl",
+          "cmd": "wsl"
         }
       ]
     },
@@ -33,6 +39,11 @@
           "args": true,
           "name": "bin/podman",
           "sidecar": true
+        },
+        {
+          "args": true,
+          "name": "wsl",
+          "cmd": "wsl"
         }
       ]
     }

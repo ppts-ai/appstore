@@ -1,7 +1,9 @@
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useLocale } from '@/hooks/LocaleContext';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect } from "react";
 
+import { createStore } from '@tauri-apps/plugin-store';
 
 function classNames(...classes: any[]) {
   return classes.filter(Boolean).join(' ')
@@ -9,6 +11,31 @@ function classNames(...classes: any[]) {
 
 const Layout = () => {
   const { locale, setLocale } = useLocale();
+  const navigate = useNavigate();
+
+  const checkPodmanInit = async () => {
+    try {
+      // create a new store or load the existing one
+      const store = await createStore('store.bin');
+
+      // Get a value.
+      const val = await store.get<{ value: boolean }>('podman');
+      if(!val) {
+        navigate("/init");
+      }
+
+
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    } finally {
+      
+    }
+  };
+
+  useEffect(() => {
+    checkPodmanInit();
+  }, []);
+  
   return (
 
 
@@ -23,7 +50,7 @@ const Layout = () => {
                 'rounded-md px-3 py-2 text-sm font-medium',
               )}
             >
-              Home
+              应用
             </Link>
             <Link
              
@@ -32,7 +59,7 @@ const Layout = () => {
                'rounded-md px-3 py-2 text-sm font-medium',
              )}
            >
-             Explore
+             市场
            </Link>
            
            <Select onValueChange={(value)=>setLocale(value)} value={locale}>
