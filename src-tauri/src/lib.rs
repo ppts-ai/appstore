@@ -1,15 +1,15 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 use futures_util::{SinkExt, StreamExt};
-use std::fs::read;
 use once_cell::sync::Lazy;
+use reqwest::blocking::get;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::path::Path;
-use std::io::copy;
-use reqwest::blocking::get;
-use std::error::Error;
 use std::env;
+use std::error::Error;
+use std::fs::read;
 use std::fs::{self, File};
+use std::io::copy;
+use std::path::Path;
 use std::sync::Mutex;
 use tauri::path::BaseDirectory;
 use tauri::{
@@ -37,7 +37,12 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) -> Result<(), String> {
+async fn install(
+    app: tauri::AppHandle,
+    appName: &str,
+    icon: &str,
+    data: &str,
+) -> Result<(), String> {
     println!("Key: {}, Value: {}", appName, icon);
     let map: HashMap<String, Value> = serde_json::from_str(data).unwrap();
 
@@ -45,64 +50,68 @@ async fn install(app: tauri::AppHandle, appName: &str, icon: &str, data: &str) -
         println!("Key: {}, Value: {}", key, value);
     }
 
-        let app_path = app
-            .path()
-            .resolve(format!("apps/{}", appName), BaseDirectory::AppData)
-            .unwrap();
-        // Use result as needed
-        let mut result = 0;
-        let path = Path::new(&app_path);
-    
-        // Check if the directory exists, and create it if it doesn't
-        if !path.exists() {
-            fs::create_dir_all(path);
-            println!("Directory created: {:?}", path);
-        } else {
-            println!("Directory already exists: {:?}", path);
-        }
-
-        let logo_path = app
+    let app_path = app
         .path()
-        .resolve(format!("apps/{}/icon.png",appName), BaseDirectory::AppData)
+        .resolve(format!("apps/{}", appName), BaseDirectory::AppData)
         .unwrap();
-        download_image(icon, logo_path.as_path());
+    // Use result as needed
+    let mut result = 0;
+    let path = Path::new(&app_path);
 
-        if let Some(form) = map.get("form") {
-            // Serialize the struct to a JSON string
-            let json_data = serde_json::to_string_pretty(&form).unwrap();
+    // Check if the directory exists, and create it if it doesn't
+    if !path.exists() {
+        fs::create_dir_all(path);
+        println!("Directory created: {:?}", path);
+    } else {
+        println!("Directory already exists: {:?}", path);
+    }
 
-            let form_file = app
+    let logo_path = app
+        .path()
+        .resolve(format!("apps/{}/icon.png", appName), BaseDirectory::AppData)
+        .unwrap();
+    download_image(icon, logo_path.as_path());
+
+    if let Some(form) = map.get("form") {
+        // Serialize the struct to a JSON string
+        let json_data = serde_json::to_string_pretty(&form).unwrap();
+
+        let form_file = app
             .path()
-            .resolve(format!("apps/{}/form.json",appName), BaseDirectory::AppData)
+            .resolve(
+                format!("apps/{}/form.json", appName),
+                BaseDirectory::AppData,
+            )
             .unwrap();
 
-            // Write the JSON data to the file
-            fs::write(&form_file, json_data);
-        }
+        // Write the JSON data to the file
+        fs::write(&form_file, json_data);
+    }
 
-        if let Some(compose) = map.get("compose") {
-            // Serialize the struct to a JSON string
-            let yaml_data = serde_yaml::to_string(&compose).unwrap();
+    if let Some(compose) = map.get("compose") {
+        // Serialize the struct to a JSON string
+        let yaml_data = serde_yaml::to_string(&compose).unwrap();
 
-            let yaml_file = app
+        let yaml_file = app
             .path()
-            .resolve(format!("apps/{}/docker-compose.yaml",appName), BaseDirectory::AppData)
+            .resolve(
+                format!("apps/{}/docker-compose.yaml", appName),
+                BaseDirectory::AppData,
+            )
             .unwrap();
 
-            // Write the JSON data to the file
-            fs::write(&yaml_file, yaml_data);
-        }
+        // Write the JSON data to the file
+        fs::write(&yaml_file, yaml_data);
+    }
 
-        let webview_window = app.get_webview_window("main").unwrap();
-            
-        let urls = format!("tauri://localhost/app?name={}", appName);
-        let mut webview_window_clone = webview_window.clone();
-        let _ = webview_window_clone.navigate(url::Url::parse(&urls).unwrap());
+    let webview_window = app.get_webview_window("main").unwrap();
 
-        Ok(())
-        
+    let urls = format!("tauri://localhost/app?name={}", appName);
+    let mut webview_window_clone = webview_window.clone();
+    let _ = webview_window_clone.navigate(url::Url::parse(&urls).unwrap());
+
+    Ok(())
 }
-
 
 fn download_image(url: &str, path: &Path) -> Result<(), Box<dyn Error>> {
     // Send a GET request to download the image
@@ -140,11 +149,10 @@ fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn s
             .resource_dir()
             .expect("Exec path not available");
         if cfg!(target_os = "windows") {
-
         } else if cfg!(target_os = "macos") {
             podman_dir = podman_dir.parent().unwrap().to_path_buf().join("MacOS");
         }
-        
+
         // Step 4: Create the containers.conf content
         let containers_conf_content = format!(
             "[engine]\nhelper_binaries_dir = [\"{}\"]\n",
@@ -177,14 +185,17 @@ fn replace_alias(command: &str) -> &str {
 }
 
 #[tauri::command]
-async fn open_window(app: tauri::AppHandle, name: &str, url: &str ) -> Result<(), String> {
+async fn open_window(app: tauri::AppHandle, name: &str, url: &str) -> Result<(), String> {
     println!("open new window {}", name);
-    let webview_window =
-    tauri::WebviewWindowBuilder::new(&app, name, tauri::WebviewUrl::External(url::Url::parse(url).unwrap()))
-        .inner_size(800.0, 600.0)
-        .title(name)
-        .proxy_url(url::Url::parse("socks5://51.75.126.150:19353").unwrap())
-        .build();
+    let webview_window = tauri::WebviewWindowBuilder::new(
+        &app,
+        name,
+        tauri::WebviewUrl::External(url::Url::parse(url).unwrap()),
+    )
+    .inner_size(800.0, 600.0)
+    .title(name)
+    .proxy_url(url::Url::parse("socks5://51.75.126.150:19353").unwrap())
+    .build();
     Ok(())
 }
 
@@ -192,21 +203,19 @@ async fn open_window(app: tauri::AppHandle, name: &str, url: &str ) -> Result<()
 fn list_apps(app: tauri::AppHandle) -> String {
     let file_path = app.path().resolve("apps", BaseDirectory::AppData).unwrap();
     let mut subfolders = Vec::new();
-      
+
     if file_path.exists() {
         if (file_path.is_dir()) {
             let dir = fs::read_dir(file_path).unwrap();
             for entry in dir {
-                let entry = entry.unwrap();  // Unwrap the Result<DirEntry>
-                let path = entry.file_name();     // Call .path() on the DirEntry
+                let entry = entry.unwrap(); // Unwrap the Result<DirEntry>
+                let path = entry.file_name(); // Call .path() on the DirEntry
                 let pathStr = path.to_string_lossy().to_string();
                 if pathStr.starts_with('.') {
-                }else {
+                } else {
                     subfolders.push(pathStr);
                 }
-                
             }
-            
         }
     }
 
@@ -228,34 +237,43 @@ pub fn run() {
 
     builder
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_log::Builder::new()
-        .target(tauri_plugin_log::Target::new(
-          tauri_plugin_log::TargetKind::LogDir {
-            file_name: Some("logs".to_string()),
-          },
-        ))
-        .max_file_size(999_000 /* bytes */)
-        .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
-        .build())
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::LogDir {
+                        file_name: Some("logs".to_string()),
+                    },
+                ))
+                .max_file_size(10_999_000 /* bytes */)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+                .build(),
+        )
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .register_uri_scheme_protocol("appdata", |_ctx, request| {
             let path = request.uri().to_string().replace("appdata://", "");
-            let file_path = _ctx.app_handle().path().resolve(path, BaseDirectory::AppData).unwrap();
-      
+            let file_path = _ctx
+                .app_handle()
+                .path()
+                .resolve(path, BaseDirectory::AppData)
+                .unwrap();
+
             if file_path.exists() {
                 let file_bytes = read(file_path).unwrap();
                 let mime_type = "image/png";
                 return tauri::http::Response::builder()
                     .header("Content-Type", mime_type.to_string())
-                    .body(file_bytes.into()).unwrap();
+                    .body(file_bytes.into())
+                    .unwrap();
             }
-      
+
             // Return 404 if file is not found
             tauri::http::Response::builder()
-              .status(404)
-              .body(vec![]).unwrap()
-          })
+                .status(404)
+                .body(vec![])
+                .unwrap()
+        })
         .setup(|app| {
             let app_handle = app.handle();
             create_containers_conf(app.handle())?;
@@ -266,117 +284,21 @@ pub fn run() {
                 let url = &event.urls()[0];
                 let host = url.host().unwrap();
                 let path = url.path();
-    
+
                 if let Host::Domain(domain) = host {
-                    let urls = format!("https://hub.ppts.ai/packages/{}{}", domain,path);
+                    let urls = format!("https://hub.ppts.ai/packages/{}{}", domain, path);
                     let mut webview_window_clone = webview_window.clone();
                     let _ = webview_window_clone.navigate(url::Url::parse(&urls).unwrap());
                 }
             });
-
-            // Get the autostart manager
-            let autostart_manager = app.autolaunch();
-            if let Ok(enabled) = autostart_manager.is_enabled() {
-                if !enabled {
-                    // Enable autostart
-                    let _ = autostart_manager.enable();
-                    // Check enable state
-                    println!(
-                        "registered for autostart? {}",
-                        autostart_manager.is_enabled().unwrap()
-                    );
-                }
-            } else {
-                // handle the error case
-            }
-
-            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&quit_i])?;
-
-            let tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
-                .menu(&menu)
-                .menu_on_left_click(true)
-                .on_menu_event(|app, event| match event.id.as_ref() {
-                    "quit" => {
-                        println!("quit menu item was clicked");
-                        app.exit(0);
-                    }
-                    _ => {
-                        println!("menu item not handled");
-                    }
-                })
-                .on_tray_icon_event(|tray, event| match event {
-                    TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        button_state: MouseButtonState::Up,
-                        ..
-                    } => {
-                        println!("left click pressed and released");
-                        // in this example, let's show and focus the main window when the tray is clicked
-                        let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                    }
-                    _ => {
-                        println!("unhandled event {event:?}");
-                    }
-                })
-                .build(app)?;
-            let app_handle = app.handle().clone();
-            // Run the command in the async block
-            tauri::async_runtime::spawn(async move {
-                // Now app_handle can be safely used in this async block
-                let sidecar = app_handle
-                    .shell()
-                    .sidecar("podman")
-                    .expect("podman command not found");
-
-                let output = sidecar
-                    .args(["machine", "ls"])
-                    .output()
-                    .await
-                    .expect("failed to run podman command");
-
-                if output.status.success() {
-                    let stdout = String::from_utf8_lossy(&output.stdout);
-                    println!("Command Output: {}", stdout);
-                    let line_count = stdout.lines().count();
-                    if line_count <= 2 {
-                        println!("Output is a single line.");
-                        if let Some(mut webview_window) = app_handle.get_webview_window("main") {
-                            let _ = webview_window.navigate(
-                                url::Url::parse("tauri://localhost/init").expect("parse url error"),
-                            );
-                        }
-                    } else {
-                        println!("Output has multiple lines. Line count: {}", line_count);
-                        let line = stdout
-                            .lines()
-                            .nth(2)
-                            .expect("line 2 not available")
-                            .trim_end();
-                        println!("current line. {}", line);
-                        if line.is_empty() {
-                            if let Some(mut webview_window) = app_handle.get_webview_window("main")
-                            {
-                                let _ = webview_window.navigate(
-                                    url::Url::parse("tauri://localhost/init")
-                                        .expect("parse url error"),
-                                );
-                            }
-                        }
-                    }
-                } else {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("Command failed: {}", stderr);
-                }
-            });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet,install,list_apps,open_window])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            install,
+            list_apps,
+            open_window
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
