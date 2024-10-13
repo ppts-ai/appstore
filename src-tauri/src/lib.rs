@@ -156,7 +156,7 @@ fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn s
         // Step 4: Create the containers.conf content
         let containers_conf_content = format!(
             "[engine]\nhelper_binaries_dir = [\"{}\"]\n",
-            podman_dir.to_string_lossy()
+            podman_dir.to_string_lossy().replace("\\", "/")
         );
         println!(
             "File does not exist {}",
