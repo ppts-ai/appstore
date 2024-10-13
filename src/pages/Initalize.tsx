@@ -6,6 +6,8 @@ import { z } from "zod"
 import { Command } from '@tauri-apps/plugin-shell';
 import { useState } from "react";
 import { platform } from '@tauri-apps/plugin-os';
+import { createStore } from '@tauri-apps/plugin-store';
+import { useNavigate } from "react-router-dom";
  
 const formSchema = z.object({
   cpu: z.coerce.number().min(1, {
@@ -21,6 +23,7 @@ const formSchema = z.object({
 })
 const InitalizePage = () => {
   const [messages, setMessages] = useState<string[]>([]);
+  const navigate = useNavigate();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,6 +49,13 @@ const InitalizePage = () => {
     const sidecar_command = Command.sidecar('bin/podman', ["machine","init","--cpus",`${values.cpu}`,"--memory", `${values.memory}`]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
+      if(data.code === 0 || data.code === 125) {
+        // save init status
+        createStore('store.bin').then((store) => {
+          store.set('podman',true).then(()=>store.save().then(()=>navigate("/")));
+        })
+
+      }
     });
     sidecar_command.on('error', error =>setMessages((prevMessages) => [...prevMessages, `command error: "${error}"`])); 
     sidecar_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
