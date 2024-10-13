@@ -106,7 +106,7 @@ async fn install(
 
     let webview_window = app.get_webview_window("main").unwrap();
 
-    let urls = format!("tauri://localhost/app?name={}", appName);
+    let urls = format!("http://localhost:9527/app?name={}", appName);
     let mut webview_window_clone = webview_window.clone();
     let _ = webview_window_clone.navigate(url::Url::parse(&urls).unwrap());
 
@@ -224,7 +224,9 @@ fn list_apps(app: tauri::AppHandle) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default();
+    let port: u16 = 9527;
+    let mut builder =
+        tauri::Builder::default();
 
     #[cfg(desktop)]
     {
@@ -237,6 +239,7 @@ pub fn run() {
 
     builder
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_localhost::Builder::new(port).build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(

@@ -15,11 +15,10 @@
 */
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import {  Link, useNavigate } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 export default function Home() {
   const [products, setProducts] = useState<any>([]);
-  const navigate = useNavigate();
   useEffect(() => {
     invoke('list_apps', {}).then((value) => {
       const data = JSON.parse(value as string);
@@ -33,7 +32,7 @@ export default function Home() {
         };
       })
       console.log(items);
-      if(items.length == 0) navigate("/explore");
+      if(items.length == 0) window.location.href = "https://hub.ppts.ai/packages/search";
       setProducts(items);
       });
    
