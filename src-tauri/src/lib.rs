@@ -1,14 +1,13 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 use futures_util::{SinkExt, StreamExt};
 use once_cell::sync::Lazy;
-use reqwest::blocking::get;
+use reqwest::get;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fs::read;
 use std::fs::{self, File};
-use std::io::copy;
 use std::path::Path;
 use std::sync::Mutex;
 use tauri::path::BaseDirectory;
@@ -30,6 +29,10 @@ use tokio::net::TcpListener;
 use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::Message;
 use url::Host;
+use std::io::{copy, Cursor};
+use std::io::{self, BufReader};
+use flate2::read::GzDecoder;
+use tar::Archive;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -44,11 +47,6 @@ async fn install(
     data: &str,
 ) -> Result<(), String> {
     println!("Key: {}, Value: {}", appName, icon);
-    let map: HashMap<String, Value> = serde_json::from_str(data).unwrap();
-
-    for (key, value) in &map {
-        println!("Key: {}, Value: {}", key, value);
-    }
 
     let app_path = app
         .path()
@@ -66,43 +64,23 @@ async fn install(
         println!("Directory already exists: {:?}", path);
     }
 
+
+    let app_path2 = app
+    .path()
+    .resolve("apps", BaseDirectory::AppData)
+    .unwrap();
+
+    println!("First file: {:?} {:?}", data, app_path2);
+    download_and_extract_zip(data,app_path2.as_path()).await;
+
     let logo_path = app
-        .path()
-        .resolve(format!("apps/{}/icon.png", appName), BaseDirectory::AppData)
-        .unwrap();
-    download_image(icon, logo_path.as_path());
+    .path()
+    .resolve(format!("apps/{}/icon.png", appName), BaseDirectory::AppData)
+    .unwrap();
+println!("icon path: {:?}", logo_path);
+download_image(icon, logo_path.as_path()).await;
 
-    if let Some(form) = map.get("form") {
-        // Serialize the struct to a JSON string
-        let json_data = serde_json::to_string_pretty(&form).unwrap();
 
-        let form_file = app
-            .path()
-            .resolve(
-                format!("apps/{}/form.json", appName),
-                BaseDirectory::AppData,
-            )
-            .unwrap();
-
-        // Write the JSON data to the file
-        fs::write(&form_file, json_data);
-    }
-
-    if let Some(compose) = map.get("compose") {
-        // Serialize the struct to a JSON string
-        let yaml_data = serde_yaml::to_string(&compose).unwrap();
-
-        let yaml_file = app
-            .path()
-            .resolve(
-                format!("apps/{}/docker-compose.yaml", appName),
-                BaseDirectory::AppData,
-            )
-            .unwrap();
-
-        // Write the JSON data to the file
-        fs::write(&yaml_file, yaml_data);
-    }
 
     let webview_window = app.get_webview_window("main").unwrap();
 
@@ -113,15 +91,15 @@ async fn install(
     Ok(())
 }
 
-fn download_image(url: &str, path: &Path) -> Result<(), Box<dyn Error>> {
+async fn download_image(url: &str, path: &Path) -> Result<(), Box<dyn Error>> {
     // Send a GET request to download the image
-    let response = get(url)?;
+    let response = get(url).await?;
 
     // Open a file at the specified path
     let mut file = File::create(path)?;
 
     // Copy the image from the response body into the file
-    let mut content = response.bytes()?;
+    let mut content = response.bytes().await?;
     copy(&mut content.as_ref(), &mut file)?;
 
     Ok(())
@@ -305,4 +283,24 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+
+
+async fn download_and_extract_zip(url: &str, destination: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    // Step 1: Download the ZIP file
+    let response = get(url).await?;
+    let mut cursor = Cursor::new(response.bytes().await?);
+
+    
+    // Create a GzDecoder to decompress the content
+    let decoder = GzDecoder::new(cursor);
+    
+    // Create a tar Archive from the decompressed data
+    let mut archive = Archive::new(decoder);
+    
+    // Extract all the files to the current directory
+    archive.unpack(destination)?;
+
+    Ok(())
 }

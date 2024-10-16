@@ -3,7 +3,7 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "remote": {
-    "urls": ["http://localhost:9527"]
+    "urls": ["http://localhost:9527","https://hub.ppts.ai"]
   },
   "windows": [
     "main"
