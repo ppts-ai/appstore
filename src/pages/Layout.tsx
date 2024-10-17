@@ -4,6 +4,11 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { useEffect } from "react";
 
 import { createStore } from '@tauri-apps/plugin-store';
+import {
+  CopilotKit,
+} from "@copilotkit/react-core";
+
+
 
 function classNames(...classes: any[]) {
   return classes.filter(Boolean).join(' ')
@@ -38,7 +43,9 @@ const Layout = () => {
   
   return (
 
-
+    <CopilotKit
+    runtimeUrl="https://ppts.ai/api/copilotkit"
+  >
     <div>
 
         <nav aria-label="Tabs" className="flex space-x-4">
@@ -80,6 +87,7 @@ const Layout = () => {
       <Outlet />
       </main>
     </div>
+    </CopilotKit>
   );
 }
 
