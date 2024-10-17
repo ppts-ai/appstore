@@ -271,14 +271,14 @@ pub fn run() {
             .expect("Exec path not available");
             if cfg!(target_os = "windows") {
                 let current_path = env::var("PATH").unwrap_or_default();
-                let new_path = format!("{}:{}", podman_dir.to_string_lossy().replace("\\", "/"), current_path);
+                let new_path = format!("{};{}", podman_dir.to_string_lossy().replace("\\", "/"), current_path);
                 
                 println!("new path: {}", new_path);
                 env::set_var("PATH", new_path); // Set the PATH globally
             } else if cfg!(target_os = "macos") {
                 podman_dir = podman_dir.parent().unwrap().to_path_buf().join("MacOS");
                 let current_path = env::var("PATH").unwrap_or_default();
-                let new_path = format!("{}:{}", podman_dir.to_string_lossy().replace("\\", "/"), current_path);
+                let new_path = format!("{}:{}", podman_dir.to_string_lossy(), current_path);
                 println!("new path: {}", new_path);
                 env::set_var("PATH", new_path); // Set the PATH globally
             }
