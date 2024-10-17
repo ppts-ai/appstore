@@ -67,6 +67,7 @@ jobs:
         touch "./src-tauri/bin/podman-mac-helper-x86_64-pc-windows-msvc.exe"
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.4\usr\bin\gvproxy.exe" -Destination "./src-tauri/bin/gvproxy-x86_64-pc-windows-msvc.exe"
         touch "./src-tauri/bin/vfkit-x86_64-pc-windows-msvc.exe"
+        curl -L https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-windows-x86_64.exe --output ./src-tauri/bin/docker-compose-x86_64-pc-windows-msvc.exe
 
       
     - name: setup node

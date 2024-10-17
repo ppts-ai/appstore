@@ -265,6 +265,24 @@ pub fn run() {
             let app_handle = app.handle();
             create_containers_conf(app.handle())?;
 
+            let mut podman_dir = app_handle
+            .path()
+            .resource_dir()
+            .expect("Exec path not available");
+            if cfg!(target_os = "windows") {
+                let current_path = env::var("PATH").unwrap_or_default();
+                let new_path = format!("{}:{}", podman_dir.display(), current_path);
+                println!("new path: {}", new_path);
+                env::set_var("PATH", new_path); // Set the PATH globally
+            } else if cfg!(target_os = "macos") {
+                podman_dir = podman_dir.parent().unwrap().to_path_buf().join("MacOS");
+                let current_path = env::var("PATH").unwrap_or_default();
+                let new_path = format!("{}:{}", podman_dir.display(), current_path);
+                println!("new path: {}", new_path);
+                env::set_var("PATH", new_path); // Set the PATH globally
+            }
+
+
             let webview_window = app.get_webview_window("main").unwrap();
 
             app.deep_link().on_open_url(move |event| {
