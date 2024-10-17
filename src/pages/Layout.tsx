@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useLocale } from '@/hooks/LocaleContext';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect } from "react";
+import { Command } from '@tauri-apps/plugin-shell';
 
 import { createStore } from '@tauri-apps/plugin-store';
 import {
@@ -28,7 +29,7 @@ const Layout = () => {
       if(!val) {
         navigate("/init");
       }
-
+      Command.sidecar('bin/podman', ["machine","start"]).spawn();
 
     } catch (error) {
       console.error('Error loading messages:', error);
