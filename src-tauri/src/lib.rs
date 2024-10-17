@@ -33,6 +33,15 @@ use std::io::{copy, Cursor};
 use std::io::{self, BufReader};
 use flate2::read::GzDecoder;
 use tar::Archive;
+use base64::{encode};
+use serde::Serialize;
+use std::path::PathBuf;
+
+#[derive(Serialize)]
+struct AppInfo {
+    name: String,
+    image: String,
+}
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -84,7 +93,7 @@ download_image(icon, logo_path.as_path()).await;
 
     let webview_window = app.get_webview_window("main").unwrap();
 
-    let urls = format!("http://localhost:9527/app?name={}", appName);
+    let urls = format!("tauri://localhost/app?name={}", appName);
     let mut webview_window_clone = webview_window.clone();
     let _ = webview_window_clone.navigate(url::Url::parse(&urls).unwrap());
 
@@ -180,7 +189,7 @@ async fn open_window(app: tauri::AppHandle, name: &str, url: &str) -> Result<(),
 #[tauri::command]
 fn list_apps(app: tauri::AppHandle) -> String {
     let file_path = app.path().resolve("apps", BaseDirectory::AppData).unwrap();
-    let mut subfolders = Vec::new();
+    let mut apps: Vec<AppInfo> = Vec::new();
 
     if file_path.exists() {
         if (file_path.is_dir()) {
@@ -191,13 +200,32 @@ fn list_apps(app: tauri::AppHandle) -> String {
                 let pathStr = path.to_string_lossy().to_string();
                 if pathStr.starts_with('.') {
                 } else {
-                    subfolders.push(pathStr);
+
+                    let image_path = app.path().resolve(format!("apps/{}/icon.png",pathStr), BaseDirectory::AppData).unwrap(); // Load the image data as bytes
+                    println!("file path {:?}", image_path);
+                    if (image_path.exists()) {
+                        let image_data = fs::read(image_path).expect("Failed to read image file");
+                        let encoded_image = encode(image_data); // Base64 encode the image
+                        // Add the app information to the list
+                        apps.push(AppInfo {
+                            name: pathStr.to_string(),
+                            image: format!("data:image/png;base64,{}",encoded_image),
+                        });
+                    }else {
+                        // Add the app information to the list
+                        apps.push(AppInfo {
+                            name: pathStr.to_string(),
+                            image: "".to_string(),
+                        });
+                    }
+
+                    
                 }
             }
         }
     }
 
-    return serde_json::to_string(&subfolders).unwrap();
+    return serde_json::to_string(&apps).unwrap();
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -233,29 +261,6 @@ pub fn run() {
         )
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
-        .register_uri_scheme_protocol("appdata", |_ctx, request| {
-            let path = request.uri().to_string().replace("appdata://", "");
-            let file_path = _ctx
-                .app_handle()
-                .path()
-                .resolve(path, BaseDirectory::AppData)
-                .unwrap();
-
-            if file_path.exists() {
-                let file_bytes = read(file_path).unwrap();
-                let mime_type = "image/png";
-                return tauri::http::Response::builder()
-                    .header("Content-Type", mime_type.to_string())
-                    .body(file_bytes.into())
-                    .unwrap();
-            }
-
-            // Return 404 if file is not found
-            tauri::http::Response::builder()
-                .status(404)
-                .body(vec![])
-                .unwrap()
-        })
         .setup(|app| {
             let app_handle = app.handle();
             create_containers_conf(app.handle())?;

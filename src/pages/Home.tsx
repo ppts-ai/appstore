@@ -26,14 +26,14 @@ export default function Home() {
       let items = (data as any[]).map((item,index) => {
         return {
           id: index,
-          name: item,
-          imageSrc: "appdata://apps/" + item + "/icon.png",
-          href: `/app?name=${item}`
+          name: item.name,
+          imageSrc: item.image,
+          href: `/app?name=${item.name}`
         };
       })
       console.log(items);
       if(items.length == 0) window.location.href = "https://hub.ppts.ai/packages/search";
-      setProducts(items);
+        setProducts(items);
       });
    
 
