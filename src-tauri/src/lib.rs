@@ -37,6 +37,7 @@ use base64::{encode};
 use serde::Serialize;
 use serde::Deserialize;
 use std::path::PathBuf;
+use std::process::Command;
 
 #[derive(Serialize)]
 struct AppInfo {
@@ -46,8 +47,9 @@ struct AppInfo {
 
 #[derive(Debug, Deserialize)]
 struct AppConfig {
-    open_type: String,
-    open_proxy: String,
+    open_type: Option<String>,
+    open_proxy: Option<String>,
+    open_url: Option<String>,
 }
 
 
@@ -184,16 +186,42 @@ async fn open(app: tauri::AppHandle, config_str: &str) -> Result<(), String> {
     match serde_json::from_str::<AppConfig>(config_str) {
         Ok(config) => {
             println!("Deserialized config: {:?}", config);
-            println!("open new window {}", "name");
-            let webview_window = tauri::WebviewWindowBuilder::new(
-                &app,
-                "name",
-                tauri::WebviewUrl::External(url::Url::parse("https://www.google.com").unwrap()),
-            )
-            .inner_size(800.0, 600.0)
-            .title("name")
-            .proxy_url(url::Url::parse("socks5://localhost:1082").unwrap())
-            .build();
+            let url = config.open_url.unwrap();
+            let profile_dir = app
+            .path()
+            .resolve("user_data", BaseDirectory::Data)
+            .unwrap();
+            if let Some(open_proxy) = config.open_proxy {
+                println!("has proxy configured");
+                if cfg!(target_os = "windows") {
+                    let output = Command::new("cmd") // or "chrome" depending on your OS
+                        .arg("/c")
+                        .arg(format!(
+                            "start msedge --proxy-server={} --user-data-dir={} {}",
+                            open_proxy,
+                            profile_dir.display(),
+                            url
+                        ))
+                        .spawn();
+            
+                    match output {
+                        Ok(_) => println!("Opened Chrome with URL: {}", url),
+                        Err(e) => eprintln!("Failed to open Chrome: {}", e),
+                    }
+                } else if cfg!(target_os = "macos") {
+                    let output = Command::new("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome") // or "chrome" depending on your OS
+                        .arg(format!("--proxy-server={}", open_proxy))
+                        .arg(format!("--user-data-dir={}", profile_dir.display())) // Specify the custom profile directory
+                        .arg(url)
+                        .spawn();
+            
+                    match output {
+                        Ok(_) => println!("Opened Chrome with URL: {}", url),
+                        Err(e) => eprintln!("Failed to open Chrome: {}", e),
+                    }
+                };
+            }
+
         }
         Err(e) => {
             println!("Failed to deserialize: {}", e);
