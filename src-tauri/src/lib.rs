@@ -35,6 +35,7 @@ use flate2::read::GzDecoder;
 use tar::Archive;
 use base64::{encode};
 use serde::Serialize;
+use serde::Deserialize;
 use std::path::PathBuf;
 
 #[derive(Serialize)]
@@ -42,6 +43,13 @@ struct AppInfo {
     name: String,
     image: String,
 }
+
+#[derive(Debug, Deserialize)]
+struct AppConfig {
+    open_type: String,
+    open_proxy: String,
+}
+
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -172,17 +180,25 @@ fn replace_alias(command: &str) -> &str {
 }
 
 #[tauri::command]
-async fn open_window(app: tauri::AppHandle, name: &str, url: &str) -> Result<(), String> {
-    println!("open new window {}", name);
-    let webview_window = tauri::WebviewWindowBuilder::new(
-        &app,
-        name,
-        tauri::WebviewUrl::External(url::Url::parse(url).unwrap()),
-    )
-    .inner_size(800.0, 600.0)
-    .title(name)
-    //.proxy_url(url::Url::parse("socks5://51.75.126.150:19353").unwrap())
-    .build();
+async fn open(app: tauri::AppHandle, config_str: &str) -> Result<(), String> {
+    match serde_json::from_str::<AppConfig>(config_str) {
+        Ok(config) => {
+            println!("Deserialized config: {:?}", config);
+            println!("open new window {}", "name");
+            let webview_window = tauri::WebviewWindowBuilder::new(
+                &app,
+                "name",
+                tauri::WebviewUrl::External(url::Url::parse("https://www.google.com").unwrap()),
+            )
+            .inner_size(800.0, 600.0)
+            .title("name")
+            .proxy_url(url::Url::parse("socks5://localhost:1082").unwrap())
+            .build();
+        }
+        Err(e) => {
+            println!("Failed to deserialize: {}", e);
+        }
+    }
     Ok(())
 }
 
@@ -303,7 +319,7 @@ pub fn run() {
             greet,
             install,
             list_apps,
-            open_window
+            open
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

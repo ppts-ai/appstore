@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { readFile } from '@tauri-apps/plugin-fs';
 import * as path from '@tauri-apps/api/path';
 import ReactMarkdown from 'react-markdown';
+import yaml from 'js-yaml';
+import { invoke } from '@tauri-apps/api/core';
 
 const tabs = [
   { name: 'Read Me', href: '#'},
@@ -16,12 +18,25 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
+// Function to process annotations and remove the 'ppts.ai/' prefix
+function processAnnotations(annotations: Record<string, any>): Record<string, any> {
+  const processedAnnotations: Record<string, any> = {};
+  for (const key in annotations) {
+    if (key.startsWith('ppts.ai/')) {
+      const newKey = key.replace('ppts.ai/', '').replace('-', '_');
+      processedAnnotations[newKey] = annotations[key];
+    } 
+  }
+  return processedAnnotations;
+}
+
 const AppPage = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const [searchParams] = useSearchParams();
   const name = searchParams.get("name"); // Replace with your query parameter name
   const [markdown, setMarkdown] = useState<string>('');
   const [currentTab, setCurrentTab] = useState<string>('Read Me');
+  const [appConfig, setAppConfig] = useState({});
   const [running, setRunning] = useState<boolean>(false);
 
   const toggle = ()=> {
@@ -50,6 +65,20 @@ const AppPage = () => {
         });
       });
 
+      path.join(value, `apps/${name}/Chart.yaml`).then((path) => {
+        readFile(path).then((text)=>{
+          var yamlContent = new TextDecoder().decode(text);
+          const yamlData = yaml.load(yamlContent) as Record<string, any>;
+
+        // Process the annotations
+        if (yamlData.annotations) {
+          const config = processAnnotations(yamlData.annotations);
+          setAppConfig(config);
+        }
+
+        });
+      });
+
       path.join(value, `apps/${name}/templates/docker-compose.yaml`).then((text) => {
           Command.sidecar('bin/podman', ["compose","ls"]).execute().then((child)=> {
             if (child.stdout.indexOf(text) > 0) {
@@ -72,6 +101,7 @@ const AppPage = () => {
           <button
             type="button"
             disabled={!running}
+            onClick={()=>invoke("open",{configStr: JSON.stringify(appConfig)})}
             className={classNames(
               running
                 ? ''
@@ -126,7 +156,7 @@ const AppPage = () => {
         <div>Argument</div>
       } 
        {"History" === currentTab && 
-        <div>History</div>
+        <div>{JSON.stringify(appConfig)}</div>
       } 
       </div>
     );
