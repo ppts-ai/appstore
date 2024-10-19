@@ -216,7 +216,7 @@ async fn open(app: tauri::AppHandle, config_str: &str) -> Result<(), String> {
                         .spawn();
             
                     match output {
-                        Ok(_) => println!("Opened Chrome with URL: {}", url),
+                        Ok(_) => println!("Opened Chrome with URL"),
                         Err(e) => eprintln!("Failed to open Chrome: {}", e),
                     }
                 };
