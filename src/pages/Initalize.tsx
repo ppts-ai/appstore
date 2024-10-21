@@ -6,7 +6,7 @@ import { z } from "zod"
 import { Command } from '@tauri-apps/plugin-shell';
 import { useState } from "react";
 import { platform } from '@tauri-apps/plugin-os';
-import { createStore } from '@tauri-apps/plugin-store';
+import { Store } from '@tauri-apps/plugin-store'
 import { useNavigate } from "react-router-dom";
  
 const formSchema = z.object({
@@ -51,7 +51,7 @@ const InitalizePage = () => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
         // save init status
-        createStore('store.bin').then((store) => {
+        Store.load('store.bin').then((store) => {
           store.set('podman',true).then(()=>store.save().then(()=>navigate("/")));
         })
 
