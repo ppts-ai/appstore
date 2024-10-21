@@ -37,20 +37,36 @@ const AppPage = () => {
   const [markdown, setMarkdown] = useState<string>('');
   const [currentTab, setCurrentTab] = useState<string>('Read Me');
   const [appConfig, setAppConfig] = useState({});
+  const [execLabel, setexecLabel] = useState("Start");
   const [running, setRunning] = useState<boolean>(false);
 
   const toggle = ()=> {
-    path.appDataDir().then((value) => {
-      path.join(value, `apps/${name}/templates/docker-compose.yaml`).then((text) => {
-        const sidecar_command = Command.sidecar('bin/podman', ["compose","-f",text,running?"down":"up"]);
-  
-        sidecar_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
-        sidecar_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
-        sidecar_command.spawn();
-        setRunning(!running);
+    if("command" === (appConfig as any).type) {
+      path.appDataDir().then((value) => {
+        path.join(value, `apps/${name}/templates/docker-compose.yaml`).then((text) => {
+          const sidecar_command = Command.sidecar('bin/podman', ["compose","-f",text,"run","yt-dlp","https://www.youtube.com/watch?v=385C2B3mnN4"]);
+    
+          sidecar_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
+          sidecar_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
+          sidecar_command.spawn();
+          setRunning(!running);
+        });
+        
       });
-      
-    });
+    }else {
+      path.appDataDir().then((value) => {
+        path.join(value, `apps/${name}/templates/docker-compose.yaml`).then((text) => {
+          const sidecar_command = Command.sidecar('bin/podman', ["compose","-f",text,running?"down":"up"]);
+    
+          sidecar_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
+          sidecar_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
+          sidecar_command.spawn();
+          setRunning(!running);
+        });
+        
+      });
+    }
+
 
   }
   useEffect(() => {
@@ -91,6 +107,24 @@ const AppPage = () => {
 
   }, []);
 
+  useEffect(() => {
+    // Fetch the JSON file (replace 'path/to/schema.json' with your actual file path)
+    switch((appConfig as any).type) {
+      case "command":
+        setexecLabel("Execute");
+        break;
+      case "service":
+        if(running) {
+          setexecLabel("Stop");
+        }else {
+          setexecLabel("Start");
+        }
+        break;
+      case "app":
+        break;
+    }
+  }, [appConfig, running]);
+
     return (
       <div className="p-4">
 
@@ -116,7 +150,7 @@ const AppPage = () => {
             onClick={toggle}
             className="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
-            {running?"Stop": "Start"}
+            {execLabel}
           </button>
         </div>
       </div>

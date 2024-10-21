@@ -103,7 +103,7 @@ download_image(icon, logo_path.as_path()).await;
 
     let webview_window = app.get_webview_window("main").unwrap();
 
-    let urls = format!("tauri://localhost/app?name={}", appName);
+    let urls = format!("http://localhost:9527/app?name={}", appName);
     let mut webview_window_clone = webview_window.clone();
     let _ = webview_window_clone.navigate(url::Url::parse(&urls).unwrap());
 
