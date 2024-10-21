@@ -32,7 +32,7 @@ export default function Home() {
         };
       })
       console.log(items);
-      if(items.length == 0) window.location.href = "https://hub.ppts.ai/packages/search";
+      // if(items.length == 0) window.location.href = "https://hub.ppts.ai/packages/search";
         setProducts(items);
       });
    

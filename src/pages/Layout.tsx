@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { useEffect } from "react";
 import { Command } from '@tauri-apps/plugin-shell';
 
-import { Store } from '@tauri-apps/plugin-store'
+import { createStore } from '@tauri-apps/plugin-store';
 import {
   CopilotKit,
 } from "@copilotkit/react-core";
@@ -22,7 +22,7 @@ const Layout = () => {
   const checkPodmanInit = async () => {
     try {
       // create a new store or load the existing one
-      const store = await Store.load('store.bin');
+      const store = await createStore('store.bin');
 
       // Get a value.
       const val = await store.get<{ value: boolean }>('podman');

@@ -6,7 +6,7 @@ import { z } from "zod"
 import { Command } from '@tauri-apps/plugin-shell';
 import { useState } from "react";
 import { platform } from '@tauri-apps/plugin-os';
-import { Store } from '@tauri-apps/plugin-store'
+import { createStore } from '@tauri-apps/plugin-store';
 import { useNavigate } from "react-router-dom";
  
 const formSchema = z.object({
@@ -46,12 +46,12 @@ const InitalizePage = () => {
       const result = await wsl_command.execute();
       setMessages((prevMessages) => [...prevMessages, result.stdout.replace(/\x00/g, '')]);  
     }
-    const sidecar_command = Command.sidecar('bin/podman', ["machine","init","--cpus",`${values.cpu}`,"--memory", `${values.memory}`]);  
+    const sidecar_command = Command.sidecar('bin/podman', ["machine","init","--image","docker://harbor.ppts.ai/podman/machine-os:5.2","--cpus",`${values.cpu}`,"--memory", `${values.memory}`]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
         // save init status
-        Store.load('store.bin').then((store) => {
+        createStore('store.bin').then((store) => {
           store.set('podman',true).then(()=>store.save().then(()=>navigate("/")));
         })
 
