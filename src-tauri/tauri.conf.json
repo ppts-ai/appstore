@@ -37,6 +37,7 @@
       "bin/docker-compose",
       "bin/gvproxy",
       "bin/vfkit",
+      "bin/win-sshproxy",
       "bin/podman-mac-helper"
     ],
     "resources": [
