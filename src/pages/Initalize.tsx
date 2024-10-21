@@ -46,7 +46,7 @@ const InitalizePage = () => {
       const result = await wsl_command.execute();
       setMessages((prevMessages) => [...prevMessages, result.stdout.replace(/\x00/g, '')]);  
     }
-    const sidecar_command = Command.sidecar('bin/podman', ["machine","init","--image","docker://harbor.ppts.ai/podman/machine-os:5.2","--cpus",`${values.cpu}`,"--memory", `${values.memory}`]);  
+    const sidecar_command = Command.sidecar('bin/podman', ["machine","init","--image","docker://harbor.ppts.ai/podman/machine-os-wsl:5.3","--cpus",`${values.cpu}`,"--memory", `${values.memory}`]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
