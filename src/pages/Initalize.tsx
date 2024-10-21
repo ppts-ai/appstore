@@ -37,6 +37,8 @@ const InitalizePage = () => {
     const currentPlatform = platform();
     console.log(currentPlatform);
     console.log(values)
+    let args = ["machine","init","--cpus",`${values.cpu}`,"--memory", `${values.memory}`];
+    
     if ("windows" === currentPlatform) {
       setMessages((prevMessages) => [...prevMessages, "Windows环境，检测WSL虚拟化工具是否已经安装"]);
       const wsl_command = Command.create('wsl', ["--install","--no-distribution"]);
@@ -45,8 +47,10 @@ const InitalizePage = () => {
       wsl_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
       const result = await wsl_command.execute();
       setMessages((prevMessages) => [...prevMessages, result.stdout.replace(/\x00/g, '')]);  
+      args.push("--image","docker://harbor.ppts.ai/podman/machine-os-wsl:5.3");
     }
-    const sidecar_command = Command.sidecar('bin/podman', ["machine","init","--image","docker://harbor.ppts.ai/podman/machine-os-wsl:5.3","--cpus",`${values.cpu}`,"--memory", `${values.memory}`]);  
+
+    const sidecar_command = Command.sidecar('bin/podman', args);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
