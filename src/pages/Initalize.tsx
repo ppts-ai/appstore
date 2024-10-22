@@ -48,6 +48,8 @@ const InitalizePage = () => {
       const result = await wsl_command.execute();
       setMessages((prevMessages) => [...prevMessages, result.stdout.replace(/\x00/g, '')]);  
       args.push("--image","docker://harbor.ppts.ai/podman/machine-os-wsl:5.3");
+    }else {
+      args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3");
     }
 
     const sidecar_command = Command.sidecar('bin/podman', args);  
