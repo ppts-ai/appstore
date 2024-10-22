@@ -37,7 +37,7 @@ const InitalizePage = () => {
     const currentPlatform = platform();
     console.log(currentPlatform);
     console.log(values)
-    let args = ["machine","init","--cpus",`${values.cpu}`,"--memory", `${values.memory}`];
+    let args = ["machine","init","--cpus",`${values.cpu}`,"--memory", `${values.memory*1024}`];
     
     if ("windows" === currentPlatform) {
       setMessages((prevMessages) => [...prevMessages, "Windows环境，检测WSL虚拟化工具是否已经安装"]);
