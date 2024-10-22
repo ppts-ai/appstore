@@ -54,7 +54,7 @@ jobs:
         cp "${PREFIX}/libexec/podman/gvproxy" ./src-tauri/bin/gvproxy-${{ env.TARGET }}
         cp "${PREFIX}/libexec/podman/vfkit" ./src-tauri/bin/vfkit-${{ env.TARGET }}
         touch ./src-tauri/bin/win-sshproxy-${{ env.TARGET }}
-        curl -L https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-darwin-${{matrix.arch}} --output ./src-tauri/bin/docker-compose-aarch64-apple-darwin
+        curl -L https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-darwin-${{matrix.arch}} --output ./src-tauri/bin/docker-compose-${{matrix.arch}}-apple-darwin
 
     - name: Install podman-cli on Windows
       if: runner.os == 'Windows'
