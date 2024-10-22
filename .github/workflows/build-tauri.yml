@@ -11,8 +11,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ['windows-latest','macos-13','macos-latest']
-        arch: ["x86_64","aarch64"]
         include:
           # This includes a custom scenario on Windows with Node.js 18.x
           - platform: windows-latest
