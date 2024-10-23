@@ -23,10 +23,10 @@ const registry = getDefaultRegistry();
 
 const ObjectFieldTemplate = registry.templates.ObjectFieldTemplate;
 type AppDetailProps = {
-  id: string
+  setArgs: Function
 }
 
-function AppDetail({pros}:AppDetailProps) {
+function AppDetail({setArgs}:AppDetailProps) {
   const [schema, setSchema] = useState<RJSFSchema>({
     type: 'object',
     title: "",
@@ -127,7 +127,7 @@ function AppDetail({pros}:AppDetailProps) {
 
   return (
     <div className="container">
-        <TodoList schema={schema} template={ObjectFieldTemplateWrapper} />
+        <TodoList schema={schema} template={ObjectFieldTemplateWrapper} setArgs={setArgs} />
         <CopilotSidebar
           instructions={
            schema.instruction
@@ -143,10 +143,11 @@ function AppDetail({pros}:AppDetailProps) {
 
 interface TodoListProps {
   schema: RJSFSchema; // Define the type according to the structure of the schema
-  template: any
+  template: any;
+  setArgs: Function;
 }
 
-const TodoList: React.FC<TodoListProps> = ({ schema, template }) => {
+const TodoList: React.FC<TodoListProps> = ({ schema, template, setArgs }) => {
   const [formData, setFormData] = useState({});
   const formattedSchema = {
     ...schema,
@@ -162,15 +163,9 @@ const TodoList: React.FC<TodoListProps> = ({ schema, template }) => {
       }));
   const handleChange = ({ formData }: any) => {
     setFormData(formData);
+    setArgs(formData.url)
     console.log("Real-time formData:", formData);
   };
-
-  const handleSubmit =(data: IChangeEvent<any, any, any>) => {
-    console.log("submit formData:", data.formData);
-    invoke('call_lux', { url: data.formData.url});
-  };
-
-
 
   /**
    *
@@ -232,7 +227,7 @@ const TodoList: React.FC<TodoListProps> = ({ schema, template }) => {
 
   return (
     <div>
-        <Form formData={formData} onSubmit={handleSubmit} uiSchema={uiSchema}
+        <Form formData={formData} uiSchema={uiSchema}
         onChange={handleChange} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" schema={formattedSchema} validator={validator} templates={{ ObjectFieldTemplate: template }} />
     </div>
   );
