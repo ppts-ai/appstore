@@ -2,14 +2,25 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import tailwindcss from 'tailwindcss'
+import babel from 'vite-plugin-babel';
 import path from "path"
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
   
-  plugins: [react(),nodePolyfills()],
+  plugins: [react(),
+    babel({
+      babelConfig: {
+        presets: [
+          ['@babel/preset-env', {
+            targets: "> 0.25%, not dead, IE 11" // Define your target browsers here
+          }]
+        ]
+      }
+    }),
+    nodePolyfills()
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
