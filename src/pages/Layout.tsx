@@ -58,7 +58,7 @@ const Layout = () => {
                 'rounded-md px-3 py-2 text-sm font-medium',
               )}
             >
-              应用
+              Apps
             </Link>
             <Link
              
@@ -67,7 +67,7 @@ const Layout = () => {
                'rounded-md px-3 py-2 text-sm font-medium',
              )}
            >
-             市场
+             Market Place
            </Link>
            
            <Select onValueChange={(value)=>setLocale(value)} value={locale}>

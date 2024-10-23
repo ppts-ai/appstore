@@ -221,6 +221,34 @@ async fn open(app: tauri::AppHandle, config_str: &str) -> Result<(), String> {
                     }
                 };
             }
+            else {
+                println!("no proxy configured");
+                if cfg!(target_os = "windows") {
+                    let output = Command::new("cmd") // or "chrome" depending on your OS
+                        .arg("/c")
+                        .arg(format!(
+                            "start msedge --user-data-dir={} {}",
+                            profile_dir.display(),
+                            url
+                        ))
+                        .spawn();
+            
+                    match output {
+                        Ok(_) => println!("Opened Chrome with URL"),
+                        Err(e) => eprintln!("Failed to open Chrome: {}", e),
+                    }
+                } else if cfg!(target_os = "macos") {
+                    let output = Command::new("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome") // or "chrome" depending on your OS
+                        .arg(format!("--user-data-dir={}", profile_dir.display())) // Specify the custom profile directory
+                        .arg(url)
+                        .spawn();
+            
+                    match output {
+                        Ok(_) => println!("Opened Chrome with URL"),
+                        Err(e) => eprintln!("Failed to open Chrome: {}", e),
+                    }
+                };
+            }
 
         }
         Err(e) => {

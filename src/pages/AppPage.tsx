@@ -6,6 +6,7 @@ import * as path from '@tauri-apps/api/path';
 import ReactMarkdown from 'react-markdown';
 import yaml from 'js-yaml';
 import { invoke } from '@tauri-apps/api/core';
+import AppDetail from "./AppDetail";
 
 const tabs = [
   { name: 'Read Me', href: '#'},
@@ -39,12 +40,13 @@ const AppPage = () => {
   const [appConfig, setAppConfig] = useState({});
   const [execLabel, setexecLabel] = useState("Start");
   const [running, setRunning] = useState<boolean>(false);
+  const [args, setArgs] = useState<string>("");
 
   const toggle = ()=> {
     if("command" === (appConfig as any).type) {
       path.appDataDir().then((value) => {
         path.join(value, `apps/${name}/templates/docker-compose.yaml`).then((text) => {
-          const sidecar_command = Command.sidecar('bin/podman', ["compose","-f",text,"run","yt-dlp","https://www.youtube.com/watch?v=385C2B3mnN4"]);
+          const sidecar_command = Command.sidecar('bin/podman', ["compose","-f",text,"run","yt-dlp",args]);
     
           sidecar_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
           sidecar_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
@@ -139,7 +141,7 @@ const AppPage = () => {
             className={classNames(
               running
                 ? ''
-                : 'bg-gray-500',
+                : 'hidden',
               'inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"',
             )}
           >
@@ -187,10 +189,10 @@ const AppPage = () => {
           ))
         }
                {"Argument" === currentTab && 
-        <div>Argument</div>
+        <AppDetail setArgs={setArgs} />
       } 
        {"History" === currentTab && 
-        <div>{JSON.stringify(appConfig)}</div>
+        <div>History</div>
       } 
       </div>
     );
