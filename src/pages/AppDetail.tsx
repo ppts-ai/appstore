@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { invoke } from '@tauri-apps/api/core';
 import { readFile } from '@tauri-apps/plugin-fs';
 import * as path from '@tauri-apps/api/path';
 
@@ -16,7 +15,7 @@ import {
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
 import validator from '@rjsf/validator-ajv8';
-import Form, { getDefaultRegistry, IChangeEvent } from "@rjsf/core";
+import Form, { getDefaultRegistry } from "@rjsf/core";
 import { RJSFSchema, ObjectFieldTemplateProps } from "@rjsf/utils";
 import { useSearchParams } from "react-router-dom";
 const registry = getDefaultRegistry();
