@@ -6,14 +6,13 @@ import * as path from '@tauri-apps/api/path';
 import ReactMarkdown from 'react-markdown';
 import yaml from 'js-yaml';
 import { invoke } from '@tauri-apps/api/core';
-import AppDetail from "./AppDetail";
+import Arguments from "./Arguments";
+import Settings from "./Settings";
 
-const tabs = [
-  { name: 'Read Me', href: '#'},
-  { name: 'Logs', href: '#'},
-  { name: 'Argument', href: '#'},
-  { name: 'History', href: '#'}
-]
+type Tab = {
+  name: string;
+  href: string;
+};
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
@@ -40,13 +39,13 @@ const AppPage = () => {
   const [appConfig, setAppConfig] = useState({});
   const [execLabel, setexecLabel] = useState("Start");
   const [running, setRunning] = useState<boolean>(false);
-  const [args, setArgs] = useState<string>("");
+  const [tabs, setTabs] = useState<Tab[]>([]);
 
   const toggle = ()=> {
     if("command" === (appConfig as any).type) {
       path.appDataDir().then((value) => {
         path.join(value, `apps/${name}/templates/docker-compose.yaml`).then((text) => {
-          const sidecar_command = Command.sidecar('bin/podman', ["compose","-f",text,"run","yt-dlp",args]);
+          const sidecar_command = Command.sidecar('bin/podman', ["compose","-f",text,"run","yt-dlp","-o","/downloads/test.mp4","https://www.youtube.com/watch?v=b91RBeQKGWE"]);
     
           sidecar_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
           sidecar_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
@@ -114,6 +113,12 @@ const AppPage = () => {
     switch((appConfig as any).type) {
       case "command":
         setexecLabel("Execute");
+        setTabs([
+          { name: 'Read Me', href: '#'},
+          { name: 'Logs', href: '#'},
+          { name: 'Settings', href: '#'},
+          { name: 'Argument', href: '#'}
+        ])
         break;
       case "service":
         if(running) {
@@ -121,8 +126,18 @@ const AppPage = () => {
         }else {
           setexecLabel("Start");
         }
+        setTabs([
+          { name: 'Read Me', href: '#'},
+          { name: 'Logs', href: '#'},
+          { name: 'Settings', href: '#'}
+        ])
         break;
       case "app":
+        setTabs([
+          { name: 'Read Me', href: '#'},
+          { name: 'Logs', href: '#'},
+          { name: 'Settings', href: '#'}
+        ])
         break;
     }
   }, [appConfig, running]);
@@ -183,16 +198,16 @@ const AppPage = () => {
         <ReactMarkdown>{markdown}</ReactMarkdown>
       }
 
-        {"Logs" === currentTab && 
-          messages.map((msg: any,index: number) => (
-            <div key={index}>{msg} </div>
-          ))
-        }
-               {"Argument" === currentTab && 
-        <AppDetail setArgs={setArgs} />
+      {"Logs" === currentTab && 
+        messages.map((msg: any,index: number) => (
+          <div key={index}>{msg} </div>
+        ))
+      }
+      {"Argument" === currentTab && 
+        <Arguments />
       } 
-       {"History" === currentTab && 
-        <div>History</div>
+      {"Settings" === currentTab && 
+        <Settings />
       } 
       </div>
     );

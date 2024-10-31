@@ -124,6 +124,39 @@ async fn download_image(url: &str, path: &Path) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn create_env_file(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    // Step 1: Get the app data folder path
+
+    println!("File does not exist.");
+    let app_data_path = app_handle
+        .path()
+        .resolve("", BaseDirectory::AppData)
+        .unwrap();
+    fs::create_dir_all(app_data_path);
+
+    let doc_path = app_handle
+        .path()
+        .resolve("", BaseDirectory::Document)
+        .unwrap();
+
+    let download_path = app_handle
+        .path()
+        .resolve("", BaseDirectory::Download)
+        .unwrap();
+    
+    let desktop_path = app_handle
+        .path()
+        .resolve("", BaseDirectory::Desktop)
+        .unwrap();
+
+    env::set_var("DESKTOP", &desktop_path);
+    env::set_var("DOCUMENT", &doc_path);
+    env::set_var("DOWNLOAD", &download_path);
+
+
+    Ok(())
+}
+
 fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     // Step 1: Get the app data folder path
     let containers_conf_path = app_handle
@@ -336,6 +369,7 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle();
             create_containers_conf(app.handle())?;
+            create_env_file(app.handle())?;
 
             let mut podman_dir = app_handle
             .path()
