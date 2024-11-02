@@ -54,8 +54,6 @@ jobs:
         cp "${PREFIX}/libexec/podman/gvproxy" ./src-tauri/bin/gvproxy-${{ env.TARGET }}
         cp "${PREFIX}/libexec/podman/vfkit" ./src-tauri/bin/vfkit-${{ env.TARGET }}
         touch ./src-tauri/bin/win-sshproxy-${{ env.TARGET }}
-        curl -L https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-darwin-${{matrix.arch}} --output ./src-tauri/bin/docker-compose-${{matrix.arch}}-apple-darwin
-        chmod 777 ./src-tauri/bin/docker-compose-${{matrix.arch}}-apple-darwin
 
     - name: Install podman-cli on Windows
       if: runner.os == 'Windows'
@@ -78,7 +76,6 @@ jobs:
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.5\usr\bin\gvproxy.exe" -Destination "./src-tauri/bin/gvproxy-x86_64-pc-windows-msvc.exe"
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.5\usr\bin\win-sshproxy.exe" -Destination "./src-tauri/bin/win-sshproxy-x86_64-pc-windows-msvc.exe"
         touch "./src-tauri/bin/vfkit-x86_64-pc-windows-msvc.exe"
-        curl -L https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-windows-x86_64.exe --output ./src-tauri/bin/docker-compose-x86_64-pc-windows-msvc.exe
 
       
     - name: setup node

@@ -34,7 +34,7 @@
     ],
     "externalBin": [
       "bin/podman",
-      "bin/docker-compose",
+      "bin/podman-compose",
       "bin/gvproxy",
       "bin/vfkit",
       "bin/win-sshproxy",
