@@ -48,7 +48,6 @@ jobs:
         brew install podman
         brew --prefix podman  # Get the installation prefix
         PREFIX=$(brew --prefix podman)
-        mkdir -p ./src-tauri/bin
         cp "${PREFIX}/bin/podman" ./src-tauri/bin/podman-${{ env.TARGET }}
         cp "${PREFIX}/bin/podman-mac-helper" ./src-tauri/bin/podman-mac-helper-${{ env.TARGET }}
         cp "${PREFIX}/libexec/podman/gvproxy" ./src-tauri/bin/gvproxy-${{ env.TARGET }}
@@ -70,7 +69,6 @@ jobs:
         Write-Host "Podman is installed at: $podmanPath"
         # Find Podman location
         dir C:\ProgramData\chocolatey\lib\podman-cli\tools
-        mkdir -p ./src-tauri/bin
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.5\usr\bin\podman.exe" -Destination "./src-tauri/bin/podman-x86_64-pc-windows-msvc.exe"
         touch "./src-tauri/bin/podman-mac-helper-x86_64-pc-windows-msvc.exe"
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.5\usr\bin\gvproxy.exe" -Destination "./src-tauri/bin/gvproxy-x86_64-pc-windows-msvc.exe"
