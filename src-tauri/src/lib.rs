@@ -370,7 +370,8 @@ pub fn run() {
             let app_handle = app.handle();
             create_containers_conf(app.handle())?;
             create_env_file(app.handle())?;
-
+            env::set_var("PODMAN_COMPOSE_PROVIDER", "podman-compose");
+            
             let mut podman_dir = app_handle
             .path()
             .resource_dir()
