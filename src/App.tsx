@@ -8,6 +8,7 @@ import { IntlProvider } from "react-intl";
 import InstallPage from "./pages/Install";
 import InitalizePage from "./pages/Initalize";
 import AppPage from "./pages/AppPage";
+import SettingsPage from "./pages/SettingsPage";
 
 
 
@@ -63,6 +64,7 @@ const AppWithLocale = () => {
             <Route path="init" element={<InitalizePage />} />
             <Route path="app" element={<AppPage />} />
             <Route path="install" element={<InstallPage />} />
+            <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<NoPage />} />
           </Route>
         </Routes>

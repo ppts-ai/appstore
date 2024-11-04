@@ -38,6 +38,7 @@ use serde::Serialize;
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::process::Command;
+use tauri_plugin_store::StoreExt;
 
 #[derive(Serialize)]
 struct AppInfo {
@@ -199,12 +200,6 @@ fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn s
 
     // Step 6: Set the environment variable CONTAINERS_CONF to point to the new file
     env::set_var("CONTAINERS_CONF", &containers_conf_path);
-    let registries_conf_path = app_handle
-        .path()
-        .resolve("registries.conf", BaseDirectory::Resource)
-        .unwrap();
-    env::set_var("CONTAINERS_REGISTRIES_CONF", &registries_conf_path);
-
     Ok(())
 }
 fn replace_alias(command: &str) -> &str {
@@ -368,6 +363,17 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
+            let store = app.store("my-store");
+
+            // Note that values must be serde_json::Value instances,
+            // otherwise, they will not be compatible with the JavaScript bindings.
+            let region = store.get("region").unwrap_or(Value::String("us".to_string()));
+            let registries_conf_path = app_handle
+            .path()
+            .resolve(format!("registries_{}.conf",region), BaseDirectory::Resource)
+            .unwrap();
+            env::set_var("CONTAINERS_REGISTRIES_CONF", &registries_conf_path);
+
             create_containers_conf(app.handle())?;
             create_env_file(app.handle())?;
             env::set_var("PODMAN_COMPOSE_PROVIDER", "podman-compose");
