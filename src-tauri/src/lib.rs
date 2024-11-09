@@ -328,6 +328,32 @@ fn list_apps(app: tauri::AppHandle) -> String {
     return serde_json::to_string(&apps).unwrap();
 }
 
+
+#[tauri::command]
+async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf) {
+    env::set_var("SALT", "ai.ppts.appstore");
+    #[cfg(target_os = "windows")]
+    {
+        let _ = Command::new("juicefs")
+            .env("SALT", "ai.ppts.appstore")
+            .arg("mount")
+            .arg(format!("sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096",models_path.display()))
+            .arg("Z:")
+            .spawn(); // Detached process, ignore any errors or output
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        // macOS: Start `juicefs` as a detached elevated process using `sudo`
+        let _ = Command::new("juicefs")
+            .env("SALT", "ai.ppts.appstore")
+            .arg("mount")
+            .arg(format!("sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096",models_path.display()))
+            .arg(mount_path)
+            .spawn(); // Detached process, ignore any errors or output
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let port: u16 = 9527;
@@ -364,7 +390,6 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle();
             let store = app.store("my-store");
-
             // Note that values must be serde_json::Value instances,
             // otherwise, they will not be compatible with the JavaScript bindings.
             let region = store.get("region").unwrap_or(Value::String("us".to_string()));
@@ -374,6 +399,17 @@ pub fn run() {
             .unwrap();
             env::set_var("CONTAINERS_REGISTRIES_CONF", &registries_conf_path);
 
+            let models_path = app_handle
+                .path()
+                .resolve("models.db", BaseDirectory::Resource)
+                .unwrap();
+            let mount_path = app_handle
+                .path()
+                .resolve("models", BaseDirectory::AppData)
+                .unwrap();
+            tauri::async_runtime::spawn(async {
+                start_network_disk(models_path, mount_path).await;
+            });
             create_containers_conf(app.handle())?;
             create_env_file(app.handle())?;
             env::set_var("PODMAN_COMPOSE_PROVIDER", "podman-compose");

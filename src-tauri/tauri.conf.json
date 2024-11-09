@@ -34,6 +34,7 @@
     ],
     "externalBin": [
       "bin/podman",
+      "bin/juicefs",
       "bin/podman-compose",
       "bin/gvproxy",
       "bin/vfkit",
@@ -44,7 +45,8 @@
       "registries_asia.conf",
       "registries_cn.conf",
       "registries_eu.conf",
-      "registries_us.conf"
+      "registries_us.conf",
+      "models.db"
     ]
   },
   "plugins": {
