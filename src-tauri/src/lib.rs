@@ -335,7 +335,7 @@ async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_da
     #[cfg(target_os = "windows")]
     {
         if !models_data_path.exists() {
-            fs::copy(&models_path, &models_data_path)?;
+            fs::copy(&models_path, &models_data_path);
         }
         let _ = Command::new("juicefs")
             .env("SALT", "ai.ppts.appstore")
