@@ -347,14 +347,13 @@ async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_da
         if !models_data_path.exists() {
             fs::copy(&models_path, &models_data_path);
         }
-        let mut port = 0;
-    
+
         unsafe {
-            let cstr_a = CString::new("name_owned").expect("CString::new failed");
+            let cstr_a = CString::new(format!("mount sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096 Z:",models_path.display())).expect("CString::new failed");
             let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> c_int> =
-            lib.get("MainFunc".as_bytes()).unwrap();
+            lib.get("RunMain".as_bytes()).unwrap();
             port = func(cstr_a.as_ptr());
-            println!("Library is loaded! {}", port);
+            println!("Library is loaded!");
         }
     }
 
