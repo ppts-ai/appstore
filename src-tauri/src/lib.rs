@@ -347,7 +347,6 @@ async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_da
         if !models_data_path.exists() {
             fs::copy(&models_path, &models_data_path);
         }
-        let library = state.lock().unwrap().get_library();
         let mut port = 0;
     
         unsafe {
