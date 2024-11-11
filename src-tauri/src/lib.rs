@@ -40,6 +40,16 @@ use std::path::PathBuf;
 use std::process::Command;
 use tauri_plugin_store::StoreExt;
 
+
+mod shared_lib;
+use shared_lib::SharedLibrary;
+use std::ffi::CString;
+use std::os::raw::c_char;
+use std::os::raw::c_int;
+use std::os::raw::c_void;
+use tauri::State;
+use libloading::{Library, Symbol};
+
 #[derive(Serialize)]
 struct AppInfo {
     name: String,
@@ -57,6 +67,29 @@ struct AppConfig {
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+
+#[tauri::command]
+fn run_lib(state: State<'_, Mutex<SharedLibrary>>, handle: tauri::AppHandle, app: &str, method: &str, args: &str) -> i32 {
+    let name_owned = args.to_string();
+    let library = state.lock().unwrap().get_library(&handle,app);
+    let mut port = 0;
+
+    if let Some(lib) = library {
+        unsafe {
+            let cstr_a = CString::new(name_owned).expect("CString::new failed");
+            let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> c_int> =
+                lib.get(method.as_bytes()).unwrap();
+            port = func(cstr_a.as_ptr());
+            println!("Library is loaded! {}", port);
+        }
+    } else {
+        eprintln!("Library is not loaded!");
+    }
+    // Use result as needed
+
+    return port;
 }
 
 #[tauri::command]
@@ -392,6 +425,12 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
+
+            let shared_library = SharedLibrary::new();
+            
+            // Register the state in the Tauri app context
+            app.manage(Mutex::new(shared_library));
+            
             let store = app.store("my-store");
             // Note that values must be serde_json::Value instances,
             // otherwise, they will not be compatible with the JavaScript bindings.
