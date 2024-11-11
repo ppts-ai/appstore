@@ -350,9 +350,9 @@ async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_da
         let mut port = 0;
     
         unsafe {
-            let cstr_a = CString::new(name_owned).expect("CString::new failed");
+            let cstr_a = CString::new("name_owned").expect("CString::new failed");
             let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> c_int> =
-            lib.get(method.as_bytes()).unwrap();
+            lib.get("MainFunc".as_bytes()).unwrap();
             port = func(cstr_a.as_ptr());
             println!("Library is loaded! {}", port);
         }
