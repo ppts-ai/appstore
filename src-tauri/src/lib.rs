@@ -41,14 +41,14 @@ use std::process::Command;
 use tauri_plugin_store::StoreExt;
 
 
-mod shared_lib;
-use shared_lib::SharedLibrary;
+
 use std::ffi::CString;
 use std::os::raw::c_char;
 use std::os::raw::c_int;
 use std::os::raw::c_void;
 use tauri::State;
 use libloading::{Library, Symbol};
+use std::sync::{Arc};
 
 #[derive(Serialize)]
 struct AppInfo {
@@ -67,29 +67,6 @@ struct AppConfig {
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-
-#[tauri::command]
-fn run_lib(state: State<'_, Mutex<SharedLibrary>>, handle: tauri::AppHandle, app: &str, method: &str, args: &str) -> i32 {
-    let name_owned = args.to_string();
-    let library = state.lock().unwrap().get_library(&handle,app);
-    let mut port = 0;
-
-    if let Some(lib) = library {
-        unsafe {
-            let cstr_a = CString::new(name_owned).expect("CString::new failed");
-            let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> c_int> =
-                lib.get(method.as_bytes()).unwrap();
-            port = func(cstr_a.as_ptr());
-            println!("Library is loaded! {}", port);
-        }
-    } else {
-        eprintln!("Library is not loaded!");
-    }
-    // Use result as needed
-
-    return port;
 }
 
 #[tauri::command]
@@ -363,19 +340,23 @@ fn list_apps(app: tauri::AppHandle) -> String {
 
 
 #[tauri::command]
-async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_data_path: PathBuf) {
+async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_data_path: PathBuf, lib: Library) {
     env::set_var("SALT", "ai.ppts.appstore");
     #[cfg(target_os = "windows")]
     {
         if !models_data_path.exists() {
             fs::copy(&models_path, &models_data_path);
         }
-        let _ = Command::new("juicefs")
-            .env("SALT", "ai.ppts.appstore")
-            .arg("mount")
-            .arg(format!("sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096",models_data_path.display()))
-            .arg("Z:")
-            .spawn(); // Detached process, ignore any errors or output
+        let library = state.lock().unwrap().get_library();
+        let mut port = 0;
+    
+        unsafe {
+            let cstr_a = CString::new(name_owned).expect("CString::new failed");
+            let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> c_int> =
+            lib.get(method.as_bytes()).unwrap();
+            port = func(cstr_a.as_ptr());
+            println!("Library is loaded! {}", port);
+        }
     }
 
     #[cfg(target_os = "macos")]
@@ -425,11 +406,6 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
-
-            let shared_library = SharedLibrary::new();
-            
-            // Register the state in the Tauri app context
-            app.manage(Mutex::new(shared_library));
             
             let store = app.store("my-store");
             // Note that values must be serde_json::Value instances,
@@ -453,9 +429,17 @@ pub fn run() {
                 .path()
                 .resolve("models", BaseDirectory::AppData)
                 .unwrap();
-            tauri::async_runtime::spawn(async {
-                start_network_disk(models_path, mount_path,models_data_path).await;
-            });
+            unsafe {
+                let path = app_handle
+                    .path()
+                    .resolve("juicefs.dll", BaseDirectory::Resource)
+                    .unwrap();
+                let lib = Library::new(path).unwrap();
+                tauri::async_runtime::spawn(async {
+                    start_network_disk(models_path, mount_path,models_data_path,lib).await;
+                });
+            }
+
             create_containers_conf(app.handle())?;
             create_env_file(app.handle())?;
             env::set_var("PODMAN_COMPOSE_PROVIDER", "podman-compose");
