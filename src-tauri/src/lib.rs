@@ -363,7 +363,7 @@ async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_da
         }
     
         unsafe {
-            let cstr_a = CString::new(format!("juicefs mount sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096 Z:",format_path(models_path))).expect("CString::new failed");
+            let cstr_a = CString::new(format!("juicefs mount sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096 Z:",format_path(models_data_path))).expect("CString::new failed");
             let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> *const c_char> =
             lib.get("RunMain".as_bytes()).unwrap();
             let port = func(cstr_a.as_ptr());
