@@ -34,7 +34,6 @@
     ],
     "externalBin": [
       "bin/podman",
-      "bin/juicefs",
       "bin/podman-compose",
       "bin/gvproxy",
       "bin/vfkit",
@@ -47,6 +46,7 @@
       "registries_eu.conf",
       "registries_us.conf",
       "juicefs.dll",
+      "juicefs.dylib",
       "models.db"
     ]
   },

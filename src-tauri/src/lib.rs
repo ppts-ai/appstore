@@ -355,33 +355,25 @@ fn format_path(path: PathBuf) -> String {
 
 #[tauri::command]
 async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_data_path: PathBuf, lib: Library) {
-    env::set_var("SALT", "ai.ppts.appstore");
-    #[cfg(target_os = "windows")]
-    {
-        if !models_data_path.exists() {
-            fs::copy(&models_path, &models_data_path);
-        }
-    
-        unsafe {
-            let cstr_a = CString::new(format!("juicefs mount sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096 Z:",format_path(models_data_path))).expect("CString::new failed");
-            let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> *const c_char> =
-            lib.get("RunMain".as_bytes()).unwrap();
-            let port = func(cstr_a.as_ptr());
-            let c_str = CStr::from_ptr(port);
-            println!("Library is loaded! {}",c_str.to_str().unwrap());
-        }
+    if !models_data_path.exists() {
+        fs::copy(&models_path, &models_data_path);
     }
 
-    #[cfg(target_os = "macos")]
-    {
-        // macOS: Start `juicefs` as a detached elevated process using `sudo`
-        let _ = Command::new("juicefs")
-            .env("SALT", "ai.ppts.appstore")
-            .arg("mount")
-            .arg(format!("sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096",models_path.display()))
-            .arg(mount_path)
-            .spawn(); // Detached process, ignore any errors or output
+    unsafe {
+        let path_a = CString::new(format_path(models_data_path)).expect("CString::new failed");
+        let key_a = CString::new("2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99").expect("CString::new failed");
+        let mount_a = if cfg!(windows) {
+            CString::new("Z:").expect("CString::new failed")
+        } else if cfg!(target_os = "macos") {
+            CString::new(format_path(mount_path)).expect("CString::new failed")
+        }
+        let func: Symbol<unsafe extern "C" fn(path: *const c_char, key: *const c_char, mount: *const c_char) -> *const c_char> =
+        lib.get("RunMain".as_bytes()).unwrap();
+        let port = func(path_a.as_ptr(), key_a.as_ptr(), mount_a.as_ptr());
+        let c_str = CStr::from_ptr(port);
+        println!("Library is loaded! {}",c_str.to_str().unwrap());
     }
+
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -419,7 +411,6 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
-            
             let store = app.store("my-store");
             // Note that values must be serde_json::Value instances,
             // otherwise, they will not be compatible with the JavaScript bindings.
@@ -445,7 +436,7 @@ pub fn run() {
             unsafe {
                 let path = app_handle
                     .path()
-                    .resolve("juicefs.dll", BaseDirectory::Resource)
+                    .resolve("juicefs.dylib", BaseDirectory::Resource)
                     .unwrap();
                 let lib = Library::new(path).unwrap();
                 tauri::async_runtime::spawn(async {
