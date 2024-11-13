@@ -354,7 +354,7 @@ fn format_path(path: PathBuf) -> String {
 }
 
 #[tauri::command]
-async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_data_path: PathBuf, lib: Library) {
+async fn start_network_disk(models_path: PathBuf, mount_path: String, models_data_path: PathBuf, lib: Library) {
     if !models_data_path.exists() {
         fs::copy(&models_path, &models_data_path);
     }
@@ -362,11 +362,7 @@ async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_da
     unsafe {
         let path_a = CString::new(format_path(models_data_path)).expect("CString::new failed");
         let key_a = CString::new("2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99").expect("CString::new failed");
-        let mount_a = if cfg!(windows) {
-            CString::new("Z:").expect("CString::new failed")
-        } else if cfg!(target_os = "macos") {
-            CString::new(format_path(mount_path)).expect("CString::new failed")
-        }
+        let mount_a = CString::new(mount_path).expect("CString::new failed");
         let func: Symbol<unsafe extern "C" fn(path: *const c_char, key: *const c_char, mount: *const c_char) -> *const c_char> =
         lib.get("RunMain".as_bytes()).unwrap();
         let port = func(path_a.as_ptr(), key_a.as_ptr(), mount_a.as_ptr());
@@ -429,16 +425,26 @@ pub fn run() {
                 .path()
                 .resolve("models.db", BaseDirectory::AppData)
                 .unwrap();            
-            let mount_path = app_handle
-                .path()
-                .resolve("models", BaseDirectory::AppData)
-                .unwrap();
+            let mount_path = if cfg!(windows) {
+                    "Z:".to_string()
+                } else  {
+                    format_path(app_handle
+                        .path()
+                        .resolve("models", BaseDirectory::AppData)
+                        .unwrap())
+                };
+            let lib_path = if cfg!(windows) {
+                    "juicefs.dll"
+                } else  {
+                    "juicefs.dylib"
+                };
             unsafe {
                 let path = app_handle
                     .path()
-                    .resolve("juicefs.dylib", BaseDirectory::Resource)
+                    .resolve(lib_path, BaseDirectory::Resource)
                     .unwrap();
                 let lib = Library::new(path).unwrap();
+
                 tauri::async_runtime::spawn(async {
                     start_network_disk(models_path, mount_path,models_data_path,lib).await;
                 });
