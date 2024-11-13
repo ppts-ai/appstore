@@ -49,6 +49,7 @@ use std::os::raw::c_void;
 use tauri::State;
 use libloading::{Library, Symbol};
 use std::sync::{Arc};
+use std::ffi::CStr;
 
 #[derive(Serialize)]
 struct AppInfo {
@@ -197,7 +198,7 @@ fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn s
         // Step 4: Create the containers.conf content
         let containers_conf_content = format!(
             "[engine]\nhelper_binaries_dir = [\"{}\"]\n",
-            podman_dir.to_string_lossy().replace("\\", "/")
+            format_path(podman_dir)
         );
         println!(
             "File does not exist {}",
@@ -338,6 +339,19 @@ fn list_apps(app: tauri::AppHandle) -> String {
     return serde_json::to_string(&apps).unwrap();
 }
 
+fn format_path(path: PathBuf) -> String {
+    // Convert PathBuf to a String for manipulation
+    let mut path_str = path.to_string_lossy().to_string();
+
+    // Remove the prefix if it exists
+    let prefix = r"\\?\";
+    if path_str.starts_with(prefix) {
+        path_str = path_str.trim_start_matches(prefix).to_string();
+    }
+
+    // Replace backslashes with forward slashes
+    path_str.replace('\\', "/")
+}
 
 #[tauri::command]
 async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_data_path: PathBuf, lib: Library) {
@@ -347,14 +361,14 @@ async fn start_network_disk(models_path: PathBuf, mount_path: PathBuf, models_da
         if !models_data_path.exists() {
             fs::copy(&models_path, &models_data_path);
         }
-        let mut port = 0;
     
         unsafe {
-            let cstr_a = CString::new(format!("juicefs mount sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096 Z:",models_path.display())).expect("CString::new failed");
-            let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> c_int> =
+            let cstr_a = CString::new(format!("juicefs mount sqlite3://{}?_pragma_key=2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99&_pragma_cipher_page_size=4096 Z:",format_path(models_path))).expect("CString::new failed");
+            let func: Symbol<unsafe extern "C" fn(input: *const c_char) -> *const c_char> =
             lib.get("RunMain".as_bytes()).unwrap();
-            port = func(cstr_a.as_ptr());
-            println!("Library is loaded!");
+            let port = func(cstr_a.as_ptr());
+            let c_str = CStr::from_ptr(port);
+            println!("Library is loaded! {}",c_str.to_str().unwrap());
         }
     }
 
