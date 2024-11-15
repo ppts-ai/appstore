@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fs::read;
+use std::panic;
 use std::fs::{self, File};
 use std::path::Path;
 use std::sync::Mutex;
@@ -198,7 +199,7 @@ fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn s
         // Step 4: Create the containers.conf content
         let containers_conf_content = format!(
             "[engine]\nhelper_binaries_dir = [\"{}\"]\n",
-            format_path(podman_dir)
+            format_path(&podman_dir)
         );
         println!(
             "File does not exist {}",
@@ -339,7 +340,7 @@ fn list_apps(app: tauri::AppHandle) -> String {
     return serde_json::to_string(&apps).unwrap();
 }
 
-fn format_path(path: PathBuf) -> String {
+fn format_path(path: &PathBuf) -> String {
     // Convert PathBuf to a String for manipulation
     let mut path_str = path.to_string_lossy().to_string();
 
@@ -358,17 +359,22 @@ async fn start_network_disk(models_path: PathBuf, mount_path: String, models_dat
     if !models_data_path.exists() {
         fs::copy(&models_path, &models_data_path);
     }
+    log::info!("run main method! {:?}",format_path(&models_data_path));
+    log::info!("run main method! {:?}",mount_path);
 
+    log::info!("Tauri is awesome!");
     unsafe {
-        let path_a = CString::new(format_path(models_data_path)).expect("CString::new failed");
+        let path_a = CString::new(format_path(&models_data_path)).expect("CString::new failed");
         let key_a = CString::new("2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99").expect("CString::new failed");
         let mount_a = CString::new(mount_path).expect("CString::new failed");
         let func: Symbol<unsafe extern "C" fn(path: *const c_char, key: *const c_char, mount: *const c_char) -> *const c_char> =
         lib.get("RunMain".as_bytes()).unwrap();
+        log::info!("run main method!");
         let port = func(path_a.as_ptr(), key_a.as_ptr(), mount_a.as_ptr());
         let c_str = CStr::from_ptr(port);
-        println!("Library is loaded! {}",c_str.to_str().unwrap());
+        log::info!("Library is loaded! {}",c_str.to_str().unwrap());
     }
+
 
 }
 
@@ -430,7 +436,7 @@ pub fn run() {
             let mount_path = if cfg!(windows) {
                     "Z:".to_string()
                 } else  {
-                    format_path(app_handle
+                    format_path(&app_handle
                         .path()
                         .resolve("models", BaseDirectory::AppData)
                         .unwrap())
@@ -438,7 +444,7 @@ pub fn run() {
             let lib_path = if cfg!(windows) {
                     "juicefs.dll"
                 } else  {
-                    "juicefs.dylib"
+                    format!("juicefs-{}.dylib", std::env::consts::ARCH)
                 };
             unsafe {
                 let path = app_handle
