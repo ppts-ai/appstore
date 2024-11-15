@@ -408,6 +408,8 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle();
             let store = app.store("my-store");
+            env::set_var("APP", "ai.ppts.appstore");
+            env::set_var("JFS_SUPERVISOR","test");
             // Note that values must be serde_json::Value instances,
             // otherwise, they will not be compatible with the JavaScript bindings.
             let region = store.get("region").unwrap_or(Value::String("us".to_string()));

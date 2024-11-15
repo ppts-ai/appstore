@@ -1,0 +1,85 @@
+name: Build Tauri App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Tauri Bundle
+    permissions:
+        contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # This includes a custom scenario on Windows with Node.js 18.x
+          - platform: windows-latest
+            arch: "x86_64"         
+    runs-on: ${{ matrix.platform }}
+
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: install Rust stable
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Rust cache
+      uses: swatinem/rust-cache@v2
+      with:
+          workspaces: './src-tauri -> target'
+
+    # Get the Rust target triple
+    - name: Get Rust target triple
+      id: rust-target
+      run: echo "TARGET=$(rustc -vV | grep 'host:' | awk '{print $2}')" >> $GITHUB_ENV
+
+
+    - name: Install podman-cli on Windows
+      uses: crazy-max/ghaction-chocolatey@v3
+      with:
+        args: install podman-cli -y
+    # Install Podman on Windows
+    - name: copy podman to soruce folder
+      run: |
+        podman --version
+        # Verify Podman installation
+        $podmanPath = Get-Command "podman" | Select-Object -ExpandProperty Path
+        Write-Host "Podman is installed at: $podmanPath"
+        # Find Podman location
+        dir C:\ProgramData\chocolatey\lib\podman-cli\tools
+        Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.5\usr\bin\podman.exe" -Destination "./src-tauri/bin/podman-x86_64-pc-windows-msvc.exe"
+        touch "./src-tauri/bin/podman-mac-helper-x86_64-pc-windows-msvc.exe"
+        Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.5\usr\bin\gvproxy.exe" -Destination "./src-tauri/bin/gvproxy-x86_64-pc-windows-msvc.exe"
+        Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.2.5\usr\bin\win-sshproxy.exe" -Destination "./src-tauri/bin/win-sshproxy-x86_64-pc-windows-msvc.exe"
+        touch "./src-tauri/bin/vfkit-x86_64-pc-windows-msvc.exe"
+
+    - name: Replace TAURI_SIGNING_PUBLIC_KEY in tauri.conf.json on Windows
+      shell: pwsh
+      run: |
+        $json = Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
+        $resources = $json.tauri.bundle.resources -replace "JUICEFS_LIB", "juicefs.dll"
+        $json.tauri.bundle.resources = $resources
+        $json | ConvertTo-Json -Compress  -Depth 10 | Set-Content src-tauri/tauri.conf.json
+        $json | ConvertTo-Json -Depth 10 | Write-Output
+      
+    - name: setup node
+      uses: actions/setup-node@v4
+      with:
+          node-version: 20
+
+    - name: Install Tauri CLI
+      run: npm install -g @tauri-apps/cli
+  
+    - name: Install project dependencies
+      run: npm install
+
+    - name: Build Tauri project
+      run: npm run tauri build
+
+    - name: Upload Tauri artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: appstore-${{ matrix.platform }}
+        path: ./src-tauri/target/release/bundle/msi

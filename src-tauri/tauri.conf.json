@@ -45,8 +45,7 @@
       "registries_cn.conf",
       "registries_eu.conf",
       "registries_us.conf",
-      "juicefs.dll",
-      "juicefs.dylib",
+      "JUICEFS_LIB",
       "models.db"
     ]
   },
