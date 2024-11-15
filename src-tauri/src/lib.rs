@@ -441,11 +441,11 @@ pub fn run() {
                         .resolve("models", BaseDirectory::AppData)
                         .unwrap())
                 };
+            let dylib_path = format!("juicefs-{}.dylib", std::env::consts::ARCH);
             let lib_path = if cfg!(windows) {
                     "juicefs.dll"
                 } else  {
-                    let dylib_name = format!("juicefs-{}.dylib", std::env::consts::ARCH);
-                    dylib_name.as_str()
+                    dylib_path.as_str()
                 };
             unsafe {
                 let path = app_handle
