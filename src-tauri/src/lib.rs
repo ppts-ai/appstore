@@ -444,7 +444,8 @@ pub fn run() {
             let lib_path = if cfg!(windows) {
                     "juicefs.dll"
                 } else  {
-                    format!("juicefs-{}.dylib", std::env::consts::ARCH).as_str()
+                    let dylib_name = format!("juicefs-{}.dylib", std::env::consts::ARCH);
+                    dylib_name.as_str()
                 };
             unsafe {
                 let path = app_handle
