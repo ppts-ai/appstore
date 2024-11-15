@@ -441,6 +441,7 @@ pub fn run() {
                         .resolve("models", BaseDirectory::AppData)
                         .unwrap())
                 };
+            env::set_var("MODELS",&mount_path);
             let dylib_path = format!("juicefs-{}.dylib", std::env::consts::ARCH);
             let lib_path = if cfg!(windows) {
                     "juicefs.dll"
@@ -471,13 +472,13 @@ pub fn run() {
                 let current_path = env::var("PATH").unwrap_or_default();
                 let new_path = format!("{};{}", podman_dir.to_string_lossy().replace("\\", "/"), current_path);
                 
-                println!("new path: {}", new_path);
+                log::info!("new path: {}", new_path);
                 env::set_var("PATH", new_path); // Set the PATH globally
             } else if cfg!(target_os = "macos") {
                 podman_dir = podman_dir.parent().unwrap().to_path_buf().join("MacOS");
                 let current_path = env::var("PATH").unwrap_or_default();
                 let new_path = format!("{}:{}", podman_dir.to_string_lossy(), current_path);
-                println!("new path: {}", new_path);
+                log::info!("new path: {}", new_path);
                 env::set_var("PATH", new_path); // Set the PATH globally
             }
 

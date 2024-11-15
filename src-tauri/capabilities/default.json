@@ -30,6 +30,11 @@
         },
         {
           "args": true,
+          "name": "bin/podman-compose",
+          "sidecar": true
+        },
+        {
+          "args": true,
           "name": "wsl",
           "cmd": "wsl"
         }
@@ -41,6 +46,11 @@
         {
           "args": true,
           "name": "bin/podman",
+          "sidecar": true
+        },
+        {
+          "args": true,
+          "name": "bin/podman-compose",
           "sidecar": true
         },
         {

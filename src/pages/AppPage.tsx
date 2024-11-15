@@ -57,7 +57,7 @@ const AppPage = () => {
     }else {
       path.appDataDir().then((value) => {
         path.join(value, `apps/${name}/templates/docker-compose.yaml`).then((text) => {
-          const sidecar_command = Command.sidecar('bin/podman', ["compose","-f",text,running?"down":"up"]);
+          const sidecar_command = Command.sidecar('bin/podman-compose', ["-f",text,running?"down":"up"]);
     
           sidecar_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
           sidecar_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
