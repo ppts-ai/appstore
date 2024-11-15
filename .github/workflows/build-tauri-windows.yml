@@ -59,8 +59,8 @@ jobs:
       shell: pwsh
       run: |
         $json = Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
-        $resources = $json.tauri.bundle.resources -replace "JUICEFS_LIB", "juicefs.dll"
-        $json.tauri.bundle.resources = $resources
+        $resources = $json.bundle.resources -replace "JUICEFS_LIB", "juicefs.dll"
+        $json.bundle.resources = $resources
         $json | ConvertTo-Json -Compress  -Depth 10 | Set-Content src-tauri/tauri.conf.json
         $json | ConvertTo-Json -Depth 10 | Write-Output
       
