@@ -1,4 +1,4 @@
-name: Build Tauri App mac
+name: Build Tauri App mac x86
 
 on:
   workflow_dispatch:
