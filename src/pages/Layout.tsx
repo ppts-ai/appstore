@@ -31,8 +31,11 @@ const Layout = () => {
       if(!val) {
         navigate("/init");
       }
-      Command.sidecar('bin/podman', ["machine","start"]).spawn();
-
+      const sidecar_command = Command.sidecar('bin/podman', ["machine","start"]);
+      sidecar_command.on('error', error =>console.log( `command error: "${error}"`)); 
+      sidecar_command.stdout.on('data', line => console.log(line.replace(/\x00/g, '')));
+      sidecar_command.stderr.on('data', line =>console.log( line.replace(/\x00/g, '')));
+      sidecar_command.spawn();
     } catch (error) {
       console.error('Error loading messages:', error);
     } finally {

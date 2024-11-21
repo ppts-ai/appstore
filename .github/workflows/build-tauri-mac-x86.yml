@@ -1,0 +1,77 @@
+name: Build Tauri App mac
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Tauri Bundle
+    permissions:
+        contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # This includes a custom scenario on Windows with Node.js 18.x
+          - platform: macos-13
+            arch: "x86_64"          
+    runs-on: ${{ matrix.platform }}
+
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: install Rust stable
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Rust cache
+      uses: swatinem/rust-cache@v2
+      with:
+          workspaces: './src-tauri -> target'
+
+    # Get the Rust target triple
+    - name: Get Rust target triple
+      id: rust-target
+      run: echo "TARGET=$(rustc -vV | grep 'host:' | awk '{print $2}')" >> $GITHUB_ENV
+
+
+    # Install Podman on macOS
+    - name: Install Podman on macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew update
+        brew install podman
+        brew --prefix podman  # Get the installation prefix
+        PREFIX=$(brew --prefix podman)
+        cp "${PREFIX}/bin/podman" ./src-tauri/bin/podman-${{ env.TARGET }}
+        cp "${PREFIX}/bin/podman-mac-helper" ./src-tauri/bin/podman-mac-helper-${{ env.TARGET }}
+        cp "${PREFIX}/libexec/podman/gvproxy" ./src-tauri/bin/gvproxy-${{ env.TARGET }}
+        cp "${PREFIX}/libexec/podman/vfkit" ./src-tauri/bin/vfkit-${{ env.TARGET }}
+        touch ./src-tauri/bin/win-sshproxy-${{ env.TARGET }}
+        rm -fr ./src-tauri/libs/*
+
+    - name: Replace TAURI_SIGNING_PUBLIC_KEY in tauri.conf.json on Windows
+      run: |
+        sed -i.bak 's/"JUICEFS_LIB"/"juicefs-${{ matrix.arch }}.dylib"/' src-tauri/tauri.conf.json
+
+
+    - name: setup node
+      uses: actions/setup-node@v4
+      with:
+          node-version: 20
+
+    - name: Install Tauri CLI
+      run: npm install -g @tauri-apps/cli
+  
+    - name: Install project dependencies
+      run: npm install
+
+    - name: Build Tauri project
+      run: npm run tauri build
+
+    - name: Upload Tauri artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: appstore-${{ matrix.platform }}
+        path: ./src-tauri/target/**/release/bundle/dmg

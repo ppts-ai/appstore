@@ -45,8 +45,7 @@
       "registries_cn.conf",
       "registries_eu.conf",
       "registries_us.conf",
-      "JUICEFS_LIB",
-      "models.db"
+      "libs"
     ]
   },
   "plugins": {

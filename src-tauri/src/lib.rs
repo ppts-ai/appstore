@@ -197,7 +197,7 @@ fn create_containers_conf(app_handle: &tauri::AppHandle) -> Result<(), Box<dyn s
 
         // Step 4: Create the containers.conf content
         let containers_conf_content = format!(
-            "[engine]\nhelper_binaries_dir = [\"{}\"]\n",
+            "[machine]\nrosetta=false\n[engine]\nhelper_binaries_dir = [\"{}\"]\n",
             format_path(&podman_dir)
         );
         println!(
@@ -420,42 +420,10 @@ pub fn run() {
             .path()
             .resolve(format!("registries_{}.conf",region), BaseDirectory::Resource)
             .unwrap();
+
             env::set_var("CONTAINERS_REGISTRIES_CONF", &registries_conf_path);
 
-            let models_path = app_handle
-                .path()
-                .resolve("models.db", BaseDirectory::Resource)
-                .unwrap();
-            let models_data_path = app_handle
-                .path()
-                .resolve("models.db", BaseDirectory::AppData)
-                .unwrap();            
-            let mount_path = if cfg!(windows) {
-                    "Z:".to_string()
-                } else  {
-                    format_path(&app_handle
-                        .path()
-                        .resolve("models", BaseDirectory::AppData)
-                        .unwrap())
-                };
-            env::set_var("MODELS",&mount_path);
-            let dylib_path = format!("juicefs-{}.dylib", std::env::consts::ARCH);
-            let lib_path = if cfg!(windows) {
-                    "juicefs.dll"
-                } else  {
-                    dylib_path.as_str()
-                };
-            unsafe {
-                let path = app_handle
-                    .path()
-                    .resolve(lib_path, BaseDirectory::Resource)
-                    .unwrap();
-                let lib = Library::new(path).unwrap();
-
-                tauri::async_runtime::spawn(async {
-                    start_network_disk(models_path, mount_path,models_data_path,lib).await;
-                });
-            }
+            env::set_var("MODELS", "/mnt/models");
 
             create_containers_conf(app.handle())?;
             create_env_file(app.handle())?;
@@ -477,6 +445,14 @@ pub fn run() {
                 let new_path = format!("{}:{}", podman_dir.to_string_lossy(), current_path);
                 log::info!("new path: {}", new_path);
                 env::set_var("PATH", new_path); // Set the PATH globally
+
+                let lib_path = app_handle
+                .path()
+                .resolve("libs", BaseDirectory::Resource)
+                .unwrap();
+                let current_lib_path = env::var("DYLD_LIBRARY_PATH").unwrap_or_default();
+                let new_lib_path = format!("{}:{}", lib_path.to_string_lossy().replace("\\", "/"), current_lib_path);
+                env::set_var("DYLD_LIBRARY_PATH", &new_lib_path);
             }
 
 
