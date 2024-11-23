@@ -1,13 +1,12 @@
 import { Command } from '@tauri-apps/plugin-shell';
 import { useEffect, useState } from "react";
 import { createStore, Store } from '@tauri-apps/plugin-store';
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const SettingsPage = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const [store, setStore] = useState<Store | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
 
 
   const deleteVM = async () => {
