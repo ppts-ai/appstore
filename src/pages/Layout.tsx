@@ -27,7 +27,7 @@ const Layout = () => {
       const store = await createStore('store.bin');
 
       // Get a value.
-      const val = await store.get<{ value: boolean }>('podman');
+      const val = await store.get<{ value: string }>('region');
       if(!val) {
         navigate("/init");
       }

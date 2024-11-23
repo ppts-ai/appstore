@@ -9,6 +9,7 @@ import InstallPage from "./pages/Install";
 import InitalizePage from "./pages/Initalize";
 import AppPage from "./pages/AppPage";
 import SettingsPage from "./pages/SettingsPage";
+import PatchPage from "./pages/PatchPage";
 
 
 
@@ -62,6 +63,7 @@ const AppWithLocale = () => {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="init" element={<InitalizePage />} />
+            <Route path="patch" element={<PatchPage />} />
             <Route path="app" element={<AppPage />} />
             <Route path="install" element={<InstallPage />} />
             <Route path="settings" element={<SettingsPage />} />

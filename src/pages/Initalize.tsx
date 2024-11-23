@@ -8,6 +8,8 @@ import { useState } from "react";
 import { platform } from '@tauri-apps/plugin-os';
 import { createStore } from '@tauri-apps/plugin-store';
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+
  
 const formSchema = z.object({
   cpu: z.coerce.number().min(1, {
@@ -20,6 +22,7 @@ const formSchema = z.object({
   }).max(128,{
     message: "at most asign 128G memory",
   }),
+  region: z.coerce.string(),
 })
 const InitalizePage = () => {
   const [messages, setMessages] = useState<string[]>([]);
@@ -28,7 +31,8 @@ const InitalizePage = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       cpu: 2,
-      memory: 4
+      memory: 4,
+      region: "asia"
     },
   })
 
@@ -58,7 +62,7 @@ const InitalizePage = () => {
       if(data.code === 0 || data.code === 125) {
         // save init status
         createStore('store.bin').then((store) => {
-          store.set('podman',true).then(()=>store.save().then(()=>navigate("/")));
+          store.set('region',values.region).then(()=>store.save().then(()=>navigate("/patch")));
         })
 
       }
@@ -106,6 +110,35 @@ const InitalizePage = () => {
               </FormControl>
               <FormDescription>
               设置该应用可以使用的内存容量.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="region"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-4" >
+              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">区域</FormLabel>
+              <FormControl className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a fruit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>区域</SelectLabel>
+                      <SelectItem value="asia">亚洲</SelectItem>
+                      <SelectItem value="europe">欧洲</SelectItem>
+                      <SelectItem value="amercia">北美</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormDescription>
+              所在区域，会使用附近的服务器加速下载
               </FormDescription>
               <FormMessage />
             </FormItem>
