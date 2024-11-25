@@ -45,12 +45,19 @@ const InitalizePage = () => {
     
     if ("windows" === currentPlatform) {
       setMessages((prevMessages) => [...prevMessages, "Windows环境，检测WSL虚拟化工具是否已经安装"]);
+      const status_command = Command.create('wsl', ["--status"]);
+      //status_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
+      //status_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
+      const statusResult = await status_command.execute();
+      setMessages((prevMessages) => [...prevMessages, `status result ${JSON.stringify(statusResult)}`]);
+      console.log("wsl status: " + JSON.stringify(statusResult))
       const wsl_command = Command.create('wsl', ["--install","--no-distribution"]);
     
-      wsl_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
-      wsl_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
+      //wsl_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
+      //wsl_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
       const result = await wsl_command.execute();
-      setMessages((prevMessages) => [...prevMessages, result.stdout.replace(/\x00/g, '')]);  
+      setMessages((prevMessages) => [...prevMessages, `status result ${JSON.stringify(result)}`]);
+      console.log("wsl install result: " + JSON.stringify(result))
       args.push("--image","docker://harbor.ppts.ai/podman/machine-os-wsl:5.3");
     }else {
       args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3");

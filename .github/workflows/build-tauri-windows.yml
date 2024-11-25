@@ -54,6 +54,7 @@ jobs:
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.3.0\usr\bin\gvproxy.exe" -Destination "./src-tauri/bin/gvproxy-x86_64-pc-windows-msvc.exe"
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.3.0\usr\bin\win-sshproxy.exe" -Destination "./src-tauri/bin/win-sshproxy-x86_64-pc-windows-msvc.exe"
         touch "./src-tauri/bin/vfkit-x86_64-pc-windows-msvc.exe"
+        curl.exe -L -o ./src-tauri/libs/5.3-rootfs-amd64.tar.zst "https://github.com/containers/podman-machine-wsl-os/releases/download/v20241122061126/5.3-rootfs-amd64.tar.zst"
 
     - name: Replace TAURI_SIGNING_PUBLIC_KEY in tauri.conf.json on Windows
       shell: pwsh
