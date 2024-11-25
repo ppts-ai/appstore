@@ -9,7 +9,7 @@ import { platform } from '@tauri-apps/plugin-os';
 import { createStore } from '@tauri-apps/plugin-store';
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import * as path from '@tauri-apps/api/path';
  
 const formSchema = z.object({
   cpu: z.coerce.number().min(1, {
@@ -58,7 +58,8 @@ const InitalizePage = () => {
       const result = await wsl_command.execute();
       setMessages((prevMessages) => [...prevMessages, `status result ${JSON.stringify(result)}`]);
       console.log("wsl install result: " + JSON.stringify(result))
-      args.push("--image","docker://harbor.ppts.ai/podman/machine-os-wsl:5.3");
+      const resourceDir =  await path.resourceDir();
+      args.push("--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst");
     }else {
       args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3");
     }
