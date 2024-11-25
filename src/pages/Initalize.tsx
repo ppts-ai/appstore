@@ -59,7 +59,7 @@ const InitalizePage = () => {
       setMessages((prevMessages) => [...prevMessages, `status result ${JSON.stringify(result)}`]);
       console.log("wsl install result: " + JSON.stringify(result))
       const resourceDir =  await path.resourceDir();
-      args.push("--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst");
+      args.push("--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst`);
     }else {
       args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3");
     }
