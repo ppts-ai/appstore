@@ -1,11 +1,9 @@
 import { Command } from '@tauri-apps/plugin-shell';
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { BarsArrowUpIcon } from '@heroicons/react/20/solid'
 
 const ShellPage = () => {
   const [messages, setMessages] = useState<string[]>([]);
-  const navigate = useNavigate();
 
   function splitWithQuotes(input: string): string[] {
     // Regular expression to match quoted text or unquoted words
