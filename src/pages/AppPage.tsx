@@ -6,7 +6,6 @@ import * as path from '@tauri-apps/api/path';
 import ReactMarkdown from 'react-markdown';
 import yaml from 'js-yaml';
 import { invoke } from '@tauri-apps/api/core';
-import Arguments from "./Arguments";
 import Settings from "./Settings";
 
 type Tab = {
@@ -117,7 +116,6 @@ const AppPage = () => {
           { name: 'Read Me', href: '#'},
           { name: 'Logs', href: '#'},
           { name: 'Settings', href: '#'},
-          { name: 'Argument', href: '#'}
         ])
         break;
       case "service":
@@ -203,9 +201,6 @@ const AppPage = () => {
           <div key={index}>{msg} </div>
         ))
       }
-      {"Argument" === currentTab && 
-        <Arguments />
-      } 
       {"Settings" === currentTab && 
         <Settings />
       } 
