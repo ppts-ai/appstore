@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && npm run sentry:sourcemaps",
+    "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org pptsai --project javascript-react ./dist && sentry-cli sourcemaps upload --org pptsai --project javascript-react ./dist"

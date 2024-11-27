@@ -59,6 +59,9 @@ jobs:
       with:
           node-version: 20
 
+    - name: Set Node.js memory limit
+      run: export NODE_OPTIONS="--max-old-space-size=4096"
+
     - name: Install Tauri CLI
       run: npm install -g @tauri-apps/cli
   
