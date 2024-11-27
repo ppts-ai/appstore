@@ -3,9 +3,6 @@ import { useLocale } from '@/hooks/LocaleContext';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { HeartIcon } from '@heroicons/react/20/solid'
-import {
-  CopilotKit,
-} from "@copilotkit/react-core";
 
 
 
@@ -18,9 +15,6 @@ const Layout = () => {
   
   return (
 
-    <CopilotKit
-    runtimeUrl="https://ppts.ai/api/copilotkit"
-  >
     <div>
         <nav aria-label="Tabs" className="bg-white shadow">
 
@@ -110,7 +104,6 @@ const Layout = () => {
       <Outlet />
       </main>
     </div>
-    </CopilotKit>
   );
 }
 
