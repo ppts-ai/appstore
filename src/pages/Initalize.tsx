@@ -14,8 +14,8 @@ import * as path from '@tauri-apps/api/path';
 const formSchema = z.object({
   cpu: z.coerce.number().min(1, {
     message: "at least asign 1 cpu core",
-  }).max(10,{
-    message: "at most asign 10 cpu core",
+  }).max(30,{
+    message: "at most asign 30 cpu core",
   }),
   memory: z.coerce.number().min(2, {
     message: "at least asign 2G memory",
@@ -44,20 +44,7 @@ const InitalizePage = () => {
     let args = ["machine","init","--cpus",`${values.cpu}`,"--memory", `${values.memory*1024}`];
     
     if ("windows" === currentPlatform) {
-      setMessages((prevMessages) => [...prevMessages, "Windows环境，检测WSL虚拟化工具是否已经安装"]);
-      const status_command = Command.create('wsl', ["--status"]);
-      //status_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
-      //status_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
-      const statusResult = await status_command.execute();
-      setMessages((prevMessages) => [...prevMessages, `status result ${JSON.stringify(statusResult)}`]);
-      console.log("wsl status: " + JSON.stringify(statusResult))
-      const wsl_command = Command.create('wsl', ["--install","--no-distribution"]);
-    
-      //wsl_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
-      //wsl_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line]));
-      const result = await wsl_command.execute();
-      setMessages((prevMessages) => [...prevMessages, `status result ${JSON.stringify(result)}`]);
-      console.log("wsl install result: " + JSON.stringify(result))
+
       const resourceDir =  await path.resourceDir();
       args.push("--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst`);
     }else {

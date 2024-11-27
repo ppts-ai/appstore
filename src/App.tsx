@@ -10,8 +10,9 @@ import InitalizePage from "./pages/Initalize";
 import AppPage from "./pages/AppPage";
 import SettingsPage from "./pages/SettingsPage";
 import PatchPage from "./pages/PatchPage";
-
-
+import LoadingPage from "./pages/LoadingPage";
+import IntroPage from "./pages/IntroPage";
+import ShellPage from "./pages/ShellPage";
 
 // Define a type for the message files
 type Messages = {
@@ -61,8 +62,11 @@ const AppWithLocale = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
+            <Route index element={<LoadingPage />} />
+            <Route path="home" element={<Home />} />
+            <Route path="intro" element={<IntroPage />} />
             <Route path="init" element={<InitalizePage />} />
+            <Route path="shell" element={<ShellPage />} />
             <Route path="patch" element={<PatchPage />} />
             <Route path="app" element={<AppPage />} />
             <Route path="install" element={<InstallPage />} />

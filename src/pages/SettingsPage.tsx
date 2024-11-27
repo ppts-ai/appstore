@@ -34,7 +34,7 @@ const SettingsPage = () => {
         setMessages((prevMessages) => [...prevMessages, `deleting virtual machine`]);
         deleteVM()
       }else if(data.code === 125) {
-        navigate("/init");
+        navigate("/");
       }
     });
     sidecar_command.on('error', error =>setMessages((prevMessages) => [...prevMessages, `command error: "${error}"`])); 

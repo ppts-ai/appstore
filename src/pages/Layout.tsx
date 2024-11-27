@@ -1,12 +1,8 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import { useLocale } from '@/hooks/LocaleContext';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect } from "react";
-import { Command } from '@tauri-apps/plugin-shell';
 
 import { HeartIcon } from '@heroicons/react/20/solid'
-
-import { createStore } from '@tauri-apps/plugin-store';
 import {
   CopilotKit,
 } from "@copilotkit/react-core";
@@ -19,33 +15,6 @@ function classNames(...classes: any[]) {
 
 const Layout = () => {
   const { locale, setLocale } = useLocale();
-  const navigate = useNavigate();
-
-  const checkPodmanInit = async () => {
-    try {
-      // create a new store or load the existing one
-      const store = await createStore('store.bin');
-
-      // Get a value.
-      const val = await store.get<{ value: string }>('region');
-      if(!val) {
-        navigate("/init");
-      }
-      const sidecar_command = Command.sidecar('bin/podman', ["machine","start"]);
-      sidecar_command.on('error', error =>console.log( `command error: "${error}"`)); 
-      sidecar_command.stdout.on('data', line => console.log(line.replace(/\x00/g, '')));
-      sidecar_command.stderr.on('data', line =>console.log( line.replace(/\x00/g, '')));
-      sidecar_command.spawn();
-    } catch (error) {
-      console.error('Error loading messages:', error);
-    } finally {
-      
-    }
-  };
-
-  useEffect(() => {
-    checkPodmanInit();
-  }, []);
   
   return (
 
@@ -77,7 +46,7 @@ const Layout = () => {
               {/* Current: "border-indigo-500 text-gray-900", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700" */}
               <Link
              
-              to={"/"}
+              to={"/home"}
               className={classNames(
                 'inline-flex items-center border-b-2 border-indigo-500 px-1 pt-1 text-sm font-medium text-gray-900',
               )}
@@ -99,6 +68,14 @@ const Layout = () => {
               )}
             >
                 Settings
+              </Link>
+              <Link
+              to={"/shell"}
+              className={classNames(
+                'inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700',
+              )}
+            >
+                Shell
               </Link>
               <a href="https://buymeacoffee.com/p2pmax" target="_blank"
                 type="button"
