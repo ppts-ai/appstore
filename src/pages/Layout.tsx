@@ -2,7 +2,7 @@ import { Outlet, Link } from "react-router-dom";
 import { useLocale } from '@/hooks/LocaleContext';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { HeartIcon } from '@heroicons/react/20/solid'
+import { HeartIcon } from "lucide-react"
 
 
 
