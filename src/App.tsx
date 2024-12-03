@@ -13,6 +13,8 @@ import PatchPage from "./pages/PatchPage";
 import LoadingPage from "./pages/LoadingPage";
 import IntroPage from "./pages/IntroPage";
 import ShellPage from "./pages/ShellPage";
+import SetupRemotePage from "./pages/SetupRemotePage";
+import { EnvProvider } from "./hooks/EnvContext";
 
 // Define a type for the message files
 type Messages = {
@@ -67,6 +69,7 @@ const AppWithLocale = () => {
             <Route path="intro" element={<IntroPage />} />
             <Route path="init" element={<InitalizePage />} />
             <Route path="shell" element={<ShellPage />} />
+            <Route path="setupRemote" element={<SetupRemotePage />} />
             <Route path="patch" element={<PatchPage />} />
             <Route path="app" element={<AppPage />} />
             <Route path="install" element={<InstallPage />} />
@@ -82,7 +85,9 @@ const AppWithLocale = () => {
 export default function App() {
   return (
     <LocaleProvider>
+      <EnvProvider>
       <AppWithLocale />
+      </EnvProvider>
     </LocaleProvider>
   );
 }

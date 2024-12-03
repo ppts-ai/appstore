@@ -2,12 +2,15 @@ import { Command } from '@tauri-apps/plugin-shell';
 import { useEffect, useState } from "react";
 import { createStore, Store } from '@tauri-apps/plugin-store';
 import { useNavigate } from "react-router-dom";
+import { useLocale } from '@/hooks/LocaleContext';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const SettingsPage = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const [store, setStore] = useState<Store | null>(null);
   const navigate = useNavigate();
-
+  const { locale, setLocale } = useLocale();
 
   const deleteVM = async () => {
     const sidecar_command = Command.sidecar('bin/podman',["machine","reset", "-f"]);  
@@ -59,6 +62,20 @@ const SettingsPage = () => {
   
     return (
       <>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+          <Select onValueChange={(value)=>setLocale(value)} value={locale}>
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Select a fruit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Language</SelectLabel>
+          <SelectItem value="en">English</SelectItem>
+          <SelectItem value="fr">Français</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+          </div>
       <button onClick={reset}>Reset</button>
   {messages.map((msg: any,index: number) => (
       <div key={index}>{msg} </div>

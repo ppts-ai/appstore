@@ -1,8 +1,9 @@
-import { Outlet, Link } from "react-router-dom";
-import { useLocale } from '@/hooks/LocaleContext';
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { HeartIcon } from "lucide-react"
+import { useEnv } from "@/hooks/EnvContext";
+import { Button } from "@/components/ui/button";
 
 
 
@@ -11,8 +12,8 @@ function classNames(...classes: any[]) {
 }
 
 const Layout = () => {
-  const { locale, setLocale } = useLocale();
-  
+  const { env, envs, setEnv } = useEnv();
+  const navigate = useNavigate();
   return (
 
     <div>
@@ -81,15 +82,17 @@ const Layout = () => {
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-          <Select onValueChange={(value)=>setLocale(value)} value={locale}>
+          <Select onValueChange={(value)=>setEnv(value)} value={env}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Select a fruit" />
+        <SelectValue placeholder={env} />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>Language</SelectLabel>
-          <SelectItem value="en">English</SelectItem>
-          <SelectItem value="fr">Français</SelectItem>
+          <SelectLabel>Environment</SelectLabel>
+          {envs?.map((item: string) => (
+              <SelectItem key={item} value={item}>{item}</SelectItem>
+          ))}
+          <Button onClick={()=>navigate("intro")}>Add new</Button>
         </SelectGroup>
       </SelectContent>
     </Select>

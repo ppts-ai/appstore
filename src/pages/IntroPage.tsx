@@ -33,7 +33,9 @@ const IntroPage = () => {
         {currentPlatform === "macos" && (
           <div>mac</div>
         ) }
-        <Link to="/init">Next</Link>
+        <Link to="/init">Setup Local</Link>
+        <br />
+        <Link to="/setupRemote">Setup Remote</Link>
 
         <br />
         <br />

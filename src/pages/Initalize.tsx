@@ -57,7 +57,7 @@ const InitalizePage = () => {
       if(data.code === 0 || data.code === 125) {
         // save init status
         createStore('store.bin').then((store) => {
-          store.set('region',values.region).then(()=>store.save().then(()=>navigate("/patch")));
+          store.set('region',values.region).then(()=>store.save().then(()=>navigate("/")));
         })
 
       }
