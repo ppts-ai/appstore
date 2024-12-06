@@ -5,18 +5,24 @@ export enum EnvType { local, remote}
 type Environment  = {
   name: string;
   type: EnvType;
+  region?: string;
   host: string;
   username: string;
-  password: string;
+  password?: string;
+  port: number;
+  key?: string;
 }
 
 // Define the shape of the context state
 interface EnvContextProps {
   env: string;
+  local: boolean;
   envs: string[];
-  addEnv: (env: Environment) => void;
+  addEnv: (env: Environment) => Promise<void>;
   removeEnv: (env: string) => void;
   setEnv: (env: string) => void;
+  setLocal: (value: boolean) => void;
+  reset: () => Promise<void>;
   getEnv: (env: string) => Promise<Environment | null>;
 }
 
@@ -35,6 +41,12 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     // Optionally, load the locale from localStorage
     return localStorage.getItem('env') || '';
   });
+
+  const [local, setLocal] = useState<boolean>(() => {
+    // Optionally, load the locale from localStorage
+    return localStorage.getItem('local') === 'true';
+  });
+
   const [envs, setEnvs] = useState<string[]>([]);
 
     // Save the locale to localStorage on change
@@ -55,15 +67,18 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     })
   }, []);
 
-  const addEnv = (value: Environment) => {
+  const addEnv = async (value: Environment) => {
     if(envs.includes(value.name)) {
       console.log(`env ${value} already included`)
     }else {
-      createStore('store.bin').then((store) => {
-        store.set("envs", [...envs, value.name]).then(()=>store.save());
-        store.set("env_" + value.name, value).then(()=>store.save());
-        
-      });
+      let store = await createStore('store.bin');
+      await store.set("envs", [...envs, value.name]);
+      await store.set("env_" + value.name, value);
+      if(value.type === EnvType.local) {
+        localStorage.setItem("local", "true");
+        setLocal(true);
+      }
+      await store.save();
       setEnvs((prev) => [...prev, value.name]);
     }
   }
@@ -76,8 +91,17 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     console.log(value);
   }
 
+  const reset = async () => {
+    const store  = await createStore('store.bin');
+    await store?.clear();
+    setEnv('')
+    setLocal(false);
+    localStorage.setItem("local", "true");
+    
+  }
+
   return (
-    <EnvContext.Provider value={{ env, envs, addEnv, getEnv, removeEnv, setEnv }}>
+    <EnvContext.Provider value={{ env, envs,local, reset, addEnv, getEnv, removeEnv, setEnv, setLocal }}>
       {children}
     </EnvContext.Provider>
   );

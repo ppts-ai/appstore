@@ -9,7 +9,7 @@ const LoadingPage = () => {
   const runningRef = useRef(false);
   const foundRef = useRef(false);
   const navigate = useNavigate();
-  const { env, envs, getEnv } = useEnv();
+  const { env, envs, getEnv, local } = useEnv();
 
   const startVM = async () => {
     const sidecar_command = Command.sidecar('bin/podman',["machine","start"]);  
@@ -32,9 +32,9 @@ const LoadingPage = () => {
 
   useEffect(() => {
     setMessages([]);
-    if(!envs || envs.length == 0 || !env) {
+    if(!envs || envs.length == 0 || !env || !local) {
       setMessages((prevMessages) => [...prevMessages, `no environment found, go to setup`]);
-      navigate("intro")
+      navigate("init")
     }else {
       getEnv(env).then((value) => {
         console.log("env",value)

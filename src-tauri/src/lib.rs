@@ -51,6 +51,11 @@ use libloading::{Library, Symbol};
 use std::sync::{Arc};
 use std::ffi::CStr;
 
+use tokio::time;
+
+use btleplug::api::{Central, Manager as _, Peripheral, ScanFilter};
+use btleplug::platform::Manager as BLEManager;
+
 #[derive(Serialize)]
 struct AppInfo {
     name: String,
@@ -64,11 +69,109 @@ struct AppConfig {
     open_url: Option<String>,
 }
 
+#[tauri::command]
+async fn shareWIFI( device: &str,
+    ssid: &str,
+    password: &str) -> Result<(), String> {
+    format!("Hello! You've been greeted from Rust!");
+
+
+    let manager = BLEManager::new().await.map_err(|e| format!("Failed to create BLE manager: {:?}", e))?;
+    let adapter_list = manager.adapters().await.map_err(|e| format!("Failed to get BLE adapters: {:?}", e))?;
+    
+    if adapter_list.is_empty() {
+        return Err("No Bluetooth adapters found".to_string());
+    }
+
+    let adapter = adapter_list.into_iter().next().expect("No Bluetooth adapters found");
+    println!("Starting scan on {}...", adapter.adapter_info().await.unwrap());
+    
+    adapter
+        .start_scan(ScanFilter::default())
+        .await
+        .map_err(|e| format!("Failed to start scanning: {:?}", e))?;
+
+    tokio::time::sleep(Duration::from_secs(10)).await;
+
+    let peripherals = adapter.peripherals().await.map_err(|e| format!("Failed to get peripherals: {:?}", e))?;
+
+    if peripherals.is_empty() {
+        eprintln!("->>> BLE peripheral devices were not found, sorry.");
+    } else {
+        for peripheral in peripherals.iter() {
+            if let Ok(Some(properties)) = peripheral.properties().await {
+                if let Some(local_name) = properties.local_name {
+                    
+                    if (device == local_name) {
+                        // Connect to the device
+                        peripheral.connect().await;
+                        println!("Connected to the server!");
+
+                        let data = format!("{};{}", ssid, password);
+
+
+                        println!("SSID and password sent!");
+
+                        // Disconnect from the peripheral
+                        peripheral.disconnect().await;
+                        println!("Disconnected from the server.");
+                    }
+                }
+
+            }
+        }
+    }
+
+
+
+
+    adapter.stop_scan().await.map_err(|e| format!("Failed to stop scanning: {:?}", e))?;
+
+    Ok(())
+}
+use std::time::Duration;
+use tauri::command;
 
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+async fn scanBLE() -> Result<Vec<String>, String> {
+    let manager = BLEManager::new().await.map_err(|e| format!("Failed to create BLE manager: {:?}", e))?;
+    let adapter_list = manager.adapters().await.map_err(|e| format!("Failed to get BLE adapters: {:?}", e))?;
+    
+    if adapter_list.is_empty() {
+        return Err("No Bluetooth adapters found".to_string());
+    }
+    let mut local_names = Vec::new();
+    for adapter in adapter_list.iter() {
+        println!("Starting scan on {}...", adapter.adapter_info().await.unwrap());
+        
+        adapter
+            .start_scan(ScanFilter::default())
+            .await
+            .map_err(|e| format!("Failed to start scanning: {:?}", e))?;
+
+        tokio::time::sleep(Duration::from_secs(10)).await;
+
+        let peripherals = adapter.peripherals().await.map_err(|e| format!("Failed to get peripherals: {:?}", e))?;
+
+
+        if peripherals.is_empty() {
+            eprintln!("->>> BLE peripheral devices were not found, sorry.");
+        } else {
+            for peripheral in peripherals.iter() {
+                if let Ok(Some(properties)) = peripheral.properties().await {
+                    if let Some(local_name) = properties.local_name {
+                        local_names.push(local_name.clone());                    
+                    }
+
+                }
+            }
+        }
+
+        adapter.stop_scan().await.map_err(|e| format!("Failed to stop scanning: {:?}", e))?;
+    }
+    Ok(local_names)
 }
+
 
 #[tauri::command]
 async fn install(
@@ -472,7 +575,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
+            scanBLE,
+            shareWIFI,
             install,
             list_apps,
             open

@@ -1,7 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { HeartIcon } from "lucide-react"
 import { useEnv } from "@/hooks/EnvContext";
 import { Button } from "@/components/ui/button";
 
@@ -72,13 +71,14 @@ const Layout = () => {
             >
                 Shell
               </Link>
-              <a href="https://buymeacoffee.com/p2pmax" target="_blank"
-                type="button"
-                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                <HeartIcon aria-hidden="true" className="-ml-0.5 h-5 w-5" />
-                Buy me a Coffee
-              </a>
+              <Link
+              to={"/ble"}
+              className={classNames(
+                'inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700',
+              )}
+            >
+                BLE
+              </Link>
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">

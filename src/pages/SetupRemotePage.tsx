@@ -26,7 +26,7 @@ const SetupRemotePage = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    addEnv({name: values.name, type: EnvType.remote, username: values.username, password: values.password, host: values.host})
+    addEnv({name: values.name, type: EnvType.remote, username: values.username, password: values.password, host: values.host, port: 22})
   }
   
     return (

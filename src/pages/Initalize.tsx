@@ -6,12 +6,43 @@ import { z } from "zod"
 import { Command } from '@tauri-apps/plugin-shell';
 import { useState } from "react";
 import { platform } from '@tauri-apps/plugin-os';
-import { createStore } from '@tauri-apps/plugin-store';
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import * as path from '@tauri-apps/api/path';
+import { EnvType, useEnv } from "@/hooks/EnvContext";
+
+interface VirtualMachine {
+  ConfigDir: {
+      Path: string;
+  };
+  ConnectionInfo: {
+      PodmanSocket: {
+          Path: string;
+      };
+      PodmanPipe: string | null;
+  };
+  Created: string; // ISO 8601 timestamp
+  LastUp: string; // ISO 8601 timestamp
+  Name: string;
+  Resources: {
+      CPUs: number;
+      DiskSize: number; // in GB
+      Memory: number; // in MB
+      USBs: any[]; // Array of USB-related info, currently empty
+  };
+  SSHConfig: {
+      IdentityPath: string;
+      Port: number;
+      RemoteUsername: string;
+  };
+  State: string; // Example: "running"
+  UserModeNetworking: boolean;
+  Rootful: boolean;
+  Rosetta: boolean;
+}
  
 const formSchema = z.object({
+  name: z.coerce.string(),
   cpu: z.coerce.number().min(1, {
     message: "at least asign 1 cpu core",
   }).max(30,{
@@ -27,9 +58,11 @@ const formSchema = z.object({
 const InitalizePage = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const navigate = useNavigate();
+  const { addEnv } = useEnv();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "podman-machine-default",
       cpu: 2,
       memory: 4,
       region: "asia"
@@ -46,9 +79,9 @@ const InitalizePage = () => {
     if ("windows" === currentPlatform) {
 
       const resourceDir =  await path.resourceDir();
-      args.push("--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst`);
+      args.push("--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst`, values.name);
     }else {
-      args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3");
+      args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3", values.name);
     }
 
     const sidecar_command = Command.sidecar('bin/podman', args);  
@@ -56,9 +89,28 @@ const InitalizePage = () => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
         // save init status
-        createStore('store.bin').then((store) => {
-          store.set('region',values.region).then(()=>store.save().then(()=>navigate("/")));
+
+        Command.sidecar('bin/podman', ["machine", "inspect", values.name]).execute().then((result) => {
+          setMessages((prevMessages) => [...prevMessages, `inspect finished with code ${result.code} and signal ${result.signal}`]);
+          if(result.code  === 0 ) {
+            const vms: VirtualMachine[] = JSON.parse(result.stdout);
+            if(vms.length > 0) {
+              addEnv({
+                name: values.name,
+                type: EnvType.local,
+                region: values.region,
+                host: "localhost",
+                port: vms[0].SSHConfig.Port,
+                username: vms[0].SSHConfig.RemoteUsername,
+                key: vms[0].SSHConfig.IdentityPath
+              }).then(()=>navigate("/patch"));
+              
+            }else {
+              setMessages((prevMessages) => [...prevMessages, `create virtual machine ${values.name}  failed`]);
+            }
+          }
         })
+
 
       }
     });
@@ -76,6 +128,23 @@ const InitalizePage = () => {
       <h2>本程序中的应用运行于虚拟容器环境，使用前需要先初始化。该过程可能需要若干分钟</h2>
       <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+
+      <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-4" >
+              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">Name</FormLabel>
+              <FormControl className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="name of the VM" {...field} />
+              </FormControl>
+              <FormDescription>
+                设置该应用可以使用的CPU数.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />        
    
         <FormField
           control={form.control}
