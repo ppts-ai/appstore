@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Step 1: Download the executable
-echo "Downloading the executable"
+echo "Downloading the executable ${key}"
 EXECUTABLE_PATH="/usr/local/bin/juicefs"
 curl -L -o "$EXECUTABLE_PATH" "https://ppts-ai.github.io/juicefs/juicefs-x86_64"
 if [[ $? -ne 0 ]]; then
