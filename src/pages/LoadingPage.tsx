@@ -32,7 +32,7 @@ const LoadingPage = () => {
 
   useEffect(() => {
     setMessages([]);
-    if(!envs || envs.length == 0 || !env || !local) {
+    if(!envs || envs.length == 0 || !env ) {
       setMessages((prevMessages) => [...prevMessages, `no environment found, go to setup`]);
       navigate("init")
     }else {
