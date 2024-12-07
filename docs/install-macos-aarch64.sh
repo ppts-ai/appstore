@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Step 1: Download the executable
-echo "Downloading the executable"
-EXECUTABLE_PATH="/usr/local/bin/juicefs"
-curl -L -o "$EXECUTABLE_PATH" "https://ppts-ai.github.io/juicefs/juicefs-x86_64"
+echo "Downloading the executable $1"
+EXECUTABLE_PATH="/usr/local/bin/vnt-cli"
+curl -L -o "$EXECUTABLE_PATH" "https://ppts-ai.github.io/appstore/vnt-cli-aarch64"
 if [[ $? -ne 0 ]]; then
     echo "Failed to download juicefs executable. Exiting."
     exit 1
@@ -13,22 +13,18 @@ fi
 chmod +x "$EXECUTABLE_PATH"
 
 # Step 3: Create a systemd service file
-SERVICE_FILE="/etc/systemd/system/juicefs.service"
+SERVICE_FILE="/etc/systemd/system/vnt.service"
 
 echo "Creating systemd service file at $SERVICE_FILE"
 cat <<EOL > "$SERVICE_FILE"
 [Unit]
-Description=JuiceFS Service
+Description=vnt Service
 After=network.target
 
 [Service]
-ExecStart=$EXECUTABLE_PATH
+ExecStart=$EXECUTABLE_PATH -n $1 -k $2 -w $3
 Restart=always
 User=root
-Environment=APP=ai.ppts.appstore
-Environment=REGION=asia
-Environment=DB_PATH=/etc/models.db
-Environment=MOUNT_PATH=/mnt/models
 
 [Install]
 WantedBy=multi-user.target
@@ -39,15 +35,15 @@ echo "Reloading systemd manager configuration..."
 systemctl daemon-reload
 
 echo "Enabling juicefs service to start on boot..."
-systemctl enable juicefs
+systemctl enable vnt
 
 echo "Starting juicefs service..."
-systemctl start juicefs
+systemctl start vnt
 
 echo "Service juicefs setup completed."
 
 
 curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo |  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
-sudo yum install -y nvidia-container-toolkit
+sudo rpm-ostree install -y nvidia-container-toolkit
 sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
 sudo nvidia-ctk cdi list
