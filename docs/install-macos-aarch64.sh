@@ -1,5 +1,6 @@
 #!/bin/bash
 
+if [ -n "$2" ]; then
 # Step 1: Download the executable
 echo "Downloading the executable $1"
 EXECUTABLE_PATH="/usr/local/bin/vnt-cli"
@@ -22,7 +23,7 @@ Description=vnt Service
 After=network.target
 
 [Service]
-ExecStart=$EXECUTABLE_PATH -n $1 -k $2 -w $3
+ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH -n "$1" -k "$2" ${3:+-w "$3"}'
 Restart=always
 User=root
 
@@ -41,6 +42,10 @@ echo "Starting juicefs service..."
 systemctl start vnt
 
 echo "Service juicefs setup completed."
+
+else
+  echo "Service creation skipped: key is empty"
+fi
 
 
 curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo |  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
