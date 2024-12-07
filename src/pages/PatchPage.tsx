@@ -29,7 +29,7 @@ const PatchPage = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`key=${values.key} password=${values.password} curl https://ppts-ai.github.io/appstore/install-${arch()}.sh | sudo sh`]);  
+    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${arch()}.sh | sudo sh -s ${values.key} ${values.password}`]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and ${arch()} signal ${data.signal}`]);
       
@@ -72,7 +72,7 @@ const PatchPage = () => {
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
-        navigate("/")
+        //navigate("/")
       }
     });
     sidecar_command.on('error', error =>setMessages((prevMessages) => [...prevMessages, `command error: "${error}"`])); 
