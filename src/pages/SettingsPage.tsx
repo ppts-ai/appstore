@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocale } from '@/hooks/LocaleContext';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEnv } from '@/hooks/EnvContext';
 
 
 const SettingsPage = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const navigate = useNavigate();
   const { locale, setLocale } = useLocale();
+  const { reset } = useEnv();
 
   const deleteVM = async () => {
     const sidecar_command = Command.sidecar('bin/podman',["machine","reset", "-f"]);  
@@ -26,7 +28,8 @@ const SettingsPage = () => {
     });
   }
 
-  const reset = async () => {
+  const reset1 = async () => {
+    await reset();
     const sidecar_command = Command.sidecar('bin/podman',["machine","stop"]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
@@ -73,7 +76,7 @@ const SettingsPage = () => {
       </SelectContent>
     </Select>
           </div>
-      <button onClick={reset}>Reset</button>
+      <button onClick={reset1}>Reset</button>
   {messages.map((msg: any,index: number) => (
       <div key={index}>{msg} </div>
     ))}

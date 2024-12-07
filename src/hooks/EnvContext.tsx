@@ -85,6 +85,7 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     const store  = await createStore('store.bin');
     await store?.clear();
     setEnv('')
+    setEnvs([])
     
   }
 
