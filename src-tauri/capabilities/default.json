@@ -13,6 +13,7 @@
     "shell:allow-open",
     "store:default",
     "fs:default",
+    "os:allow-hostname",
     "fs:allow-app-read-recursive",
     "fs:allow-exe-read-recursive",
     "fs:scope-exe-recursive",

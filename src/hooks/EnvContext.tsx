@@ -84,6 +84,8 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
   const reset = async () => {
     const store  = await createStore('store.bin');
     await store?.clear();
+    await store?.save();
+    localStorage.removeItem("env");
     setEnv('')
     setEnvs([])
     
