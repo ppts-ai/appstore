@@ -27,7 +27,6 @@ dist-ssr
 # Sentry Config File
 .sentryclirc
 src-tauri/bin/win-sshproxy-aarch64-apple-darwin
-src-tauri/bin/vfkit-aarch64-apple-darwin
 src-tauri/bin/podman-remote-aarch64-apple-darwin
 src-tauri/bin/podman-mac-helper-aarch64-apple-darwin
 src-tauri/bin/podman-aarch64-apple-darwin
