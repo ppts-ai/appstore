@@ -4,7 +4,7 @@ if [ -n "$2" ]; then
 # Step 1: Download the executable
 echo "Downloading the executable $1"
 EXECUTABLE_PATH="/usr/local/bin/vnt-cli"
-curl -L -o "$EXECUTABLE_PATH" "https://ppts-ai.github.io/appstore/vnt-cli-aarch64"
+curl -L -o "$EXECUTABLE_PATH" "https://ppts-ai.github.io/appstore/vnt-cli-x86_64"
 if [[ $? -ne 0 ]]; then
     echo "Failed to download juicefs executable. Exiting."
     exit 1

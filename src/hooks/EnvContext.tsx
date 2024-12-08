@@ -70,6 +70,7 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
 
       await store.save();
       setEnvs((prev) => [...prev, value.name]);
+      setEnv(value.name)
     }
   }
   const getEnv = async (value: string) => {

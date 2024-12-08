@@ -15,6 +15,7 @@ import IntroPage from "./pages/IntroPage";
 import ShellPage from "./pages/ShellPage";
 import BLEPage from "./pages/BLEPage";
 import SetupRemotePage from "./pages/SetupRemotePage";
+import AddRemotePage from "./pages/AddRemotePage";
 import { EnvProvider } from "./hooks/EnvContext";
 
 // Define a type for the message files
@@ -72,6 +73,7 @@ const AppWithLocale = () => {
             <Route path="ble" element={<BLEPage />} />
             <Route path="shell" element={<ShellPage />} />
             <Route path="setupRemote" element={<SetupRemotePage />} />
+            <Route path="addRemote" element={<AddRemotePage />} />
             <Route path="patch" element={<PatchPage />} />
             <Route path="app" element={<AppPage />} />
             <Route path="install" element={<InstallPage />} />

@@ -35,8 +35,6 @@ const IntroPage = () => {
         ) }
         <Link to="/init">Setup Local</Link>
         <br />
-        <Link to="/setupRemote">Setup Remote</Link>
-        <br />
         <Link to="/addRemote">Add Remote</Link>
 
         <br />

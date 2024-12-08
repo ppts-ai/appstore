@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { hostname, arch,platform } from '@tauri-apps/plugin-os';
+import { useEnv } from "@/hooks/EnvContext";
 
 const formSchema = z.object({
   name: z.coerce.string(),
@@ -19,6 +20,7 @@ const formSchema = z.object({
 const PatchPage = () => {
   
   const [messages, setMessages] = useState<string[]>([]);
+  const { env} = useEnv();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,7 +36,7 @@ const PatchPage = () => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and ${arch()} signal ${data.signal}`]);
       
       setMessages((prevMessages) => [...prevMessages, `restarting virtual machine, stopping`]);
-      restartVM();
+      restartVM(true);
 
     });
     sidecar_command.on('error', error =>setMessages((prevMessages) => [...prevMessages, `command error: "${error}"`])); 
@@ -49,30 +51,23 @@ const PatchPage = () => {
   
   const navigate = useNavigate();
   useEffect(() => {
-    const sidecar_command = Command.sidecar('bin/podman', ["machine","start"]);  
-    sidecar_command.on('close', data => {
-      setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
-      setStarted(data.code === 0 || data.code == 125)
-    });
-    sidecar_command.on('error', error =>setMessages((prevMessages) => [...prevMessages, `command error: "${error}"`])); 
-    sidecar_command.stdout.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
-    sidecar_command.stderr.on('data', line => setMessages((prevMessages) => [...prevMessages, line.replace(/\x00/g, '')]));
-    sidecar_command.spawn().catch((err)=>{
-      setMessages((prevMessages) => [...prevMessages, err as string])
-    });
-
+    restartVM(false)
     hostname().then((value: string | null) => {
       if(value)
         form.setValue("name",value);
     })
   }, []);
 
-  const startVM = async () => {
-    const sidecar_command = Command.sidecar('bin/podman',["machine","start"]);  
+  const startVM = async (next:boolean) => {
+    const sidecar_command = Command.sidecar('bin/podman',["machine","start",env]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
-        //navigate("/")
+        if(next) {
+          navigate("/")
+        }else {
+          setStarted(data.code === 0 || data.code == 125)
+        }
       }
     });
     sidecar_command.on('error', error =>setMessages((prevMessages) => [...prevMessages, `command error: "${error}"`])); 
@@ -83,13 +78,13 @@ const PatchPage = () => {
     });
   }
 
-  const restartVM = async () => {
+  const restartVM = async (next:boolean) => {
     const sidecar_command = Command.sidecar('bin/podman',["machine","stop"]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
         setMessages((prevMessages) => [...prevMessages, `starting virtual machine`]);
-        startVM()
+        startVM(next)
       }
     });
     sidecar_command.on('error', error =>setMessages((prevMessages) => [...prevMessages, `command error: "${error}"`])); 
