@@ -41,10 +41,6 @@
       "bin/podman-mac-helper"
     ],
     "resources": [
-      "registries_asia.conf",
-      "registries_cn.conf",
-      "registries_eu.conf",
-      "registries_us.conf",
       "libs"
     ]
   },

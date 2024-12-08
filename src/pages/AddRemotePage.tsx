@@ -57,8 +57,9 @@ const AddRemotePage = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    addEnv({name: values.name, type: EnvType.remote, username: 'core', password: '', key: values.key, host: values.host, port: 22}).then(()=>{
-      invoke("activateEnv",{env: values.name})
+    const envItem = {name: values.name, type: EnvType.remote, username: 'core', password: '', key: values.key, host: values.host, port: 22};
+    addEnv(envItem).then(()=>{
+      invoke("activateEnv",{env: envItem})
       navigate("/");
   })
   }

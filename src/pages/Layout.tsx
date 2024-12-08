@@ -12,7 +12,7 @@ function classNames(...classes: any[]) {
 }
 
 const Layout = () => {
-  const { env, envs, setEnv } = useEnv();
+  const { env, envs, setEnv, getEnv } = useEnv();
   const navigate = useNavigate();
   return (
 
@@ -75,9 +75,9 @@ const Layout = () => {
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-          <Select onValueChange={(value)=>{
+          <Select onValueChange={async (value)=>{
             setEnv(value);
-            invoke("activateEnv",{env: value})
+            invoke("activateEnv",{env: await getEnv(value)})
             }} value={env}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder={env} />

@@ -176,9 +176,10 @@ async fn scanBLE() -> Result<Vec<String>, String> {
 #[tauri::command]
 async fn activateEnv(
     app: tauri::AppHandle,
-    env: &str,
+    env: Value,
 ) -> Result<(), String> {
     println!("env: {}", env);
+    
     Ok(())
 }
 
@@ -524,17 +525,6 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
-            let store = app.store("my-store");
-            // Note that values must be serde_json::Value instances,
-            // otherwise, they will not be compatible with the JavaScript bindings.
-            let region = store.get("region").unwrap_or(Value::String("us".to_string()));
-            let registries_conf_path = app_handle
-            .path()
-            .resolve(format!("registries_{}.conf",region), BaseDirectory::Resource)
-            .unwrap();
-
-            env::set_var("CONTAINERS_REGISTRIES_CONF", &registries_conf_path);
-
             env::set_var("MODELS", "/mnt/models");
 
             create_containers_conf(app.handle())?;
