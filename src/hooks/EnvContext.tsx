@@ -1,6 +1,36 @@
 import { createStore } from '@tauri-apps/plugin-store';
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
+export interface VirtualMachine {
+  ConfigDir: {
+      Path: string;
+  };
+  ConnectionInfo: {
+      PodmanSocket: {
+          Path: string;
+      };
+      PodmanPipe: string | null;
+  };
+  Created: string; // ISO 8601 timestamp
+  LastUp: string; // ISO 8601 timestamp
+  Name: string;
+  Resources: {
+      CPUs: number;
+      DiskSize: number; // in GB
+      Memory: number; // in MB
+      USBs: any[]; // Array of USB-related info, currently empty
+  };
+  SSHConfig: {
+      IdentityPath: string;
+      Port: number;
+      RemoteUsername: string;
+  };
+  State: string; // Example: "running"
+  UserModeNetworking: boolean;
+  Rootful: boolean;
+  Rosetta: boolean;
+}
+
 export enum EnvType { local, remote}
 type Environment  = {
   name: string;

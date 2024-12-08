@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 
 import { useEnv } from "@/hooks/EnvContext";
 import { Button } from "@/components/ui/button";
+import { invoke } from "@tauri-apps/api/core";
 
 
 
@@ -74,7 +75,10 @@ const Layout = () => {
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-          <Select onValueChange={(value)=>setEnv(value)} value={env}>
+          <Select onValueChange={(value)=>{
+            setEnv(value);
+            invoke("activateEnv",{env: value})
+            }} value={env}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder={env} />
       </SelectTrigger>

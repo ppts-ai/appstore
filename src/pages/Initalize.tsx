@@ -9,37 +9,9 @@ import { platform } from '@tauri-apps/plugin-os';
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import * as path from '@tauri-apps/api/path';
-import { EnvType, useEnv } from "@/hooks/EnvContext";
+import { EnvType, useEnv, VirtualMachine } from "@/hooks/EnvContext";
 
-interface VirtualMachine {
-  ConfigDir: {
-      Path: string;
-  };
-  ConnectionInfo: {
-      PodmanSocket: {
-          Path: string;
-      };
-      PodmanPipe: string | null;
-  };
-  Created: string; // ISO 8601 timestamp
-  LastUp: string; // ISO 8601 timestamp
-  Name: string;
-  Resources: {
-      CPUs: number;
-      DiskSize: number; // in GB
-      Memory: number; // in MB
-      USBs: any[]; // Array of USB-related info, currently empty
-  };
-  SSHConfig: {
-      IdentityPath: string;
-      Port: number;
-      RemoteUsername: string;
-  };
-  State: string; // Example: "running"
-  UserModeNetworking: boolean;
-  Rootful: boolean;
-  Rosetta: boolean;
-}
+
  
 const formSchema = z.object({
   name: z.coerce.string(),
@@ -79,7 +51,7 @@ const InitalizePage = () => {
     if ("windows" === currentPlatform) {
 
       const resourceDir =  await path.resourceDir();
-      args.push("--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst`, values.name);
+      args.push("--username","core","--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst`, values.name);
     }else {
       args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3", values.name);
     }
