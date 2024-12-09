@@ -10,11 +10,11 @@ mkdir -p /etc/podman
 # Create the Caddyfile with the desired content
 cat <<EOF > "$CADDYFILE_PATH"
 :2222 {
-    reverse_proxy localhost:22
+	reverse_proxy 192.168.127.2:22
 }
 
 :7376 {
-    reverse_proxy localhost:8376
+	reverse_proxy 192.168.127.2:8376
 }
 EOF
 
