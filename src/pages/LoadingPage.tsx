@@ -36,14 +36,7 @@ const LoadingPage = () => {
 
   useEffect(() => {
     setMessages([]);
-    if(!envs || envs.length == 0 || !env ) {
-      setMessages((prevMessages) => [...prevMessages, `no environment found, go to setup`]);
-      //navigate("init")
-    }else {
-      getEnv(env).then((value) => {
-        console.log("env",value)
-        if (value) {
-          if(value.type === EnvType.local) {
+
             try {
               // create a new store or load the existing one
               const sidecar_command = Command.sidecar('bin/podman', ["machine","ls"]);
@@ -60,7 +53,7 @@ const LoadingPage = () => {
                     setMessages((prevMessages) => [...prevMessages, `wait 2 sec before go to next page`]);
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     if(doneRef.current) {
-                      navigate("intro");
+                      navigate("init");
                     }
                   }
       
@@ -85,18 +78,7 @@ const LoadingPage = () => {
             } catch (error) {
               console.error('Error loading messages:', error);
             } finally {
-              
-            }
-          }else {
-            setMessages((prevMessages) => [...prevMessages, `setup remote environment connection`]);
-            navigate("home")
-          }
-        }else {
-          setMessages((prevMessages) => [...prevMessages, `no environment found, go to setup`]);
-          navigate("intro")
-        }
-      });
-
+     
 
     }
   }, [env, envs]);

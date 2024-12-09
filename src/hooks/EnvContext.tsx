@@ -1,5 +1,22 @@
-import { createStore } from '@tauri-apps/plugin-store';
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Command } from "@tauri-apps/plugin-shell";
+
+
+const parseTable = (table: string): Environment[] => {
+  const lines = table.trim().split("\n");
+  
+  // Parse the remaining lines
+  const data = lines.slice(1).map(line => {
+    const columns = line.split(/\s{2,}/).map(col => col.trim());
+    
+    const obj: Environment = {name: columns[0], uri: columns[1], identity: columns[2], isDefault: columns[3] === 'true', readWrite: columns[4] === 'true'};
+    
+    return obj;
+  });
+
+  return data;
+};
+
 
 export interface VirtualMachine {
   ConfigDir: {
@@ -32,23 +49,21 @@ export interface VirtualMachine {
 }
 
 export enum EnvType { local, remote}
-type Environment  = {
+export type Environment  = {
   name: string;
-  type: EnvType;
-  region?: string;
-  host: string;
-  username: string;
-  password?: string;
-  port: number;
-  key?: string;
+  uri: string;
+  identity: string;
+  isDefault: boolean;
+  readWrite: boolean;
 }
 
 // Define the shape of the context state
 interface EnvContextProps {
   env: string;
-  envs: string[];
+  envs: Environment[];
   addEnv: (env: Environment) => Promise<void>;
   removeEnv: (env: string) => void;
+  refreshEnv: () => Promise<void>;
   setEnv: (env: string) => void;
   reset: () => Promise<void>;
   getEnv: (env: string) => Promise<Environment | null>;
@@ -70,60 +85,61 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     return localStorage.getItem('env') || '';
   });
 
-  const [envs, setEnvs] = useState<string[]>([]);
+  const [envs, setEnvs] = useState<Environment[]>([]);
 
     // Save the locale to localStorage on change
-    useEffect(() => {
-      localStorage.setItem('env', env);
-    }, [env]);
+  useEffect(() => {
+    localStorage.setItem('env', env);
+    Command.sidecar('bin/podman', ["system","connection","default",env]).execute();
+  }, [env]);
 
   // Save the locale to localStorage on change
   useEffect(() => {
-    createStore('store.bin').then((value) => {
-      value.get<string[]>('envs').then((value1)=> {
-        if(value1) {
-          setEnvs(value1 as []);
-        }else {
-          setEnvs([]);
-        }
-      });
-    })
+    refreshEnv();
   }, []);
 
   const addEnv = async (value: Environment) => {
-    if(envs.includes(value.name)) {
-      console.log(`env ${value} already included`)
-    }else {
-      let store = await createStore('store.bin');
-      await store.set("envs", [...envs, value.name]);
-      await store.set("env_" + value.name, value);
+    const result = await Command.sidecar('bin/podman', ["system","connection","add","--identity",value.identity,value.name,value.uri]).execute();
 
-      await store.save();
-      setEnvs((prev) => [...prev, value.name]);
-      setEnv(value.name)
+    if(result.code  === 0 ) {
+      console.log(result.stdout);
+      refreshEnv();
+    }else {
+      console.log(result.stdout);
+      console.log(result.stderr);
+      
     }
   }
-  const getEnv = async (value: string) => {
-    const store = await createStore('store.bin');
-    return await store.get<Environment>("env_"+value);
 
+  const refreshEnv = async () => {
+    const result = await Command.sidecar('bin/podman', ["system","connection","list"]).execute();
+
+    if(result.code  === 0 ) {
+      console.log(result.stdout);
+      const connections = parseTable(result.stdout);
+      setEnvs(connections)
+    }
+    
+  }
+  const getEnv = async (value: string) => {
+    const env1 = envs.filter((item) => item.name === value);
+    if(env1.length > 0) {
+      return env1[0];
+    }
+    return null;
   }
   const removeEnv = (value: string) => {
-    console.log(value);
+
   }
 
   const reset = async () => {
-    const store  = await createStore('store.bin');
-    await store?.clear();
-    await store?.save();
-    localStorage.removeItem("env");
     setEnv('')
     setEnvs([])
     
   }
 
   return (
-    <EnvContext.Provider value={{ env, envs, reset, addEnv, getEnv, removeEnv, setEnv }}>
+    <EnvContext.Provider value={{ env, envs, reset, addEnv, getEnv, refreshEnv, removeEnv, setEnv }}>
       {children}
     </EnvContext.Provider>
   );

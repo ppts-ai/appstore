@@ -8,7 +8,8 @@ import { EnvType, useEnv } from "@/hooks/EnvContext";
 import { Command } from "@tauri-apps/plugin-shell";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { invoke } from "@tauri-apps/api/core";
+import { create, BaseDirectory } from '@tauri-apps/plugin-fs';
+import * as path from '@tauri-apps/api/path';
 
 
 type ParsedObject = {
@@ -57,9 +58,18 @@ const AddRemotePage = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const envItem = {name: values.name, type: EnvType.remote, username: 'core', password: '', key: values.key, host: values.host, port: 22};
-    addEnv(envItem).then(()=>{
-      invoke("activateEnv",{env: envItem})
+    const file = await create(`.local/share/containers/podman/machine/env-${values.name}`, { baseDir: BaseDirectory.Home });
+    await file.write(new TextEncoder().encode(atob(values.key)));
+    await file.close();
+    const home = await path.homeDir();
+    // create pod to forward port number for the uri
+    addEnv({
+      name: values.name,
+      uri: "ssh://core@127.0.0.1:58992",
+      identity: `${home}/.local/share/containers/podman/machine/env-${values.name}`,
+      isDefault: false,
+      readWrite: true
+    }).then(()=>{
       navigate("/");
   })
   }

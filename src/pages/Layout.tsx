@@ -1,7 +1,7 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { useEnv } from "@/hooks/EnvContext";
+import { Environment, useEnv } from "@/hooks/EnvContext";
 import { Button } from "@/components/ui/button";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -85,8 +85,8 @@ const Layout = () => {
       <SelectContent>
         <SelectGroup>
           <SelectLabel>Environment</SelectLabel>
-          {envs?.map((item: string) => (
-              <SelectItem key={item} value={item}>{item}</SelectItem>
+          {envs?.map((item: Environment) => (
+              <SelectItem key={item.name} value={item.name}>{item.name}</SelectItem>
           ))}
           <Button onClick={()=>navigate("intro")}>Add new</Button>
         </SelectGroup>

@@ -14,7 +14,6 @@ import { EnvType, useEnv, VirtualMachine } from "@/hooks/EnvContext";
 
  
 const formSchema = z.object({
-  name: z.coerce.string(),
   cpu: z.coerce.number().min(1, {
     message: "at least asign 1 cpu core",
   }).max(30,{
@@ -30,11 +29,10 @@ const formSchema = z.object({
 const InitalizePage = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const navigate = useNavigate();
-  const { addEnv } = useEnv();
+  const { refreshEnv } = useEnv();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "podman-machine-default",
       cpu: 2,
       memory: 4,
       region: "asia"
@@ -49,11 +47,10 @@ const InitalizePage = () => {
     let args = ["machine","init","--cpus",`${values.cpu}`,"--memory", `${values.memory*1024}`];
     
     if ("windows" === currentPlatform) {
-
       const resourceDir =  await path.resourceDir();
-      args.push("--username","core","--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst`, values.name);
+      args.push("--username","core","--image",`${resourceDir}/libs/5.3-rootfs-amd64.tar.zst`);
     }else {
-      args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3", values.name);
+      args.push("--image","docker://harbor.ppts.ai/podman/machine-os:5.3");
     }
 
     const sidecar_command = Command.sidecar('bin/podman', args);  
@@ -62,28 +59,8 @@ const InitalizePage = () => {
       if(data.code === 0 || data.code === 125) {
         // save init status
 
-        Command.sidecar('bin/podman', ["machine", "inspect", values.name]).execute().then((result) => {
-          setMessages((prevMessages) => [...prevMessages, `inspect finished with code ${result.code} and signal ${result.signal}`]);
-          if(result.code  === 0 ) {
-            const vms: VirtualMachine[] = JSON.parse(result.stdout);
-            if(vms.length > 0) {
-              addEnv({
-                name: values.name,
-                type: EnvType.local,
-                region: values.region,
-                host: "localhost",
-                port: vms[0].SSHConfig.Port,
-                username: vms[0].SSHConfig.RemoteUsername,
-                key: vms[0].SSHConfig.IdentityPath
-              }).then(()=>navigate("/patch"));
-              
-            }else {
-              setMessages((prevMessages) => [...prevMessages, `create virtual machine ${values.name}  failed`]);
-            }
-          }
-        })
-
-
+        refreshEnv().then(()=>navigate("/patch"));
+       
       }
     });
     sidecar_command.on('error', error =>setMessages((prevMessages) => [...prevMessages, `command error: "${error}"`])); 
@@ -93,6 +70,7 @@ const InitalizePage = () => {
       setMessages((prevMessages) => [...prevMessages, err as string])
     });
 
+
   }
   
     return (
@@ -101,23 +79,6 @@ const InitalizePage = () => {
       <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-7xl sm:px-6 lg:px-8">
 
-      <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem className="sm:col-span-4" >
-              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">Name</FormLabel>
-              <FormControl className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="name of the VM" {...field} />
-              </FormControl>
-              <FormDescription>
-                设置该应用可以使用的CPU数.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />        
-   
         <FormField
           control={form.control}
           name="cpu"
