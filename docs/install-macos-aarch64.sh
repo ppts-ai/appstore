@@ -37,7 +37,7 @@ else
     exit 1
 fi
 
-
+podman pull nginx
 podman run -d \
     --rm \
     --name ssh-proxy \
