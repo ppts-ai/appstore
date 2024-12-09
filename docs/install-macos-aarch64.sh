@@ -1,40 +1,50 @@
 #!/bin/bash
 
 
-# Define the Caddyfile path
-CADDYFILE_PATH="/etc/podman/Caddyfile"
+# Define the Nginx configuration path
+NGINX_CONF_PATH="/etc/podman/nginx.conf"
 
 # Ensure the directory exists
 mkdir -p /etc/podman
 
-# Create the Caddyfile with the desired content
-cat <<EOF > "$CADDYFILE_PATH"
-:2222 {
-	reverse_proxy 192.168.127.2:22
-}
+# Create the Nginx configuration file
+cat <<EOF > "$NGINX_CONF_PATH"
+events {}
 
-:7376 {
-	reverse_proxy 192.168.127.2:8376
+stream {
+    # Proxy SSH traffic from port 2222 to port 22 (local SSH server)
+    server {
+        listen 2222;
+        proxy_pass 10.26.0.3:22;
+    }
+
+    # Optional: Proxy other TCP services, such as MySQL (if needed)
+    # server {
+    #     listen 3306;
+    #     proxy_pass localhost:3306;
+    # }
 }
 EOF
 
-# Set appropriate permissions for the Caddyfile
-chmod 644 "$CADDYFILE_PATH"
+# Set appropriate permissions for the Nginx configuration file
+chmod 644 "$NGINX_CONF_PATH"
 
 # Confirm the file was created
-if [[ -f "$CADDYFILE_PATH" ]]; then
-    echo "Caddyfile created successfully at $CADDYFILE_PATH"
+if [[ -f "$NGINX_CONF_PATH" ]]; then
+    echo "Nginx configuration created successfully at $NGINX_CONF_PATH"
 else
-    echo "Failed to create Caddyfile at $CADDYFILE_PATH"
+    echo "Failed to create Nginx configuration at $NGINX_CONF_PATH"
     exit 1
 fi
 
+
 podman run -d \
+    --rm \
     --name ssh-proxy \
     -p 2222:2222 \
     -p 7376:7376 \
-    -v /etc/podman/Caddyfile:/etc/caddy/Caddyfile:ro \
-    caddy caddy run --config /etc/caddy/Caddyfile
+    -v /etc/podman/nginx.conf:/etc/nginx/nginx.conf \
+    nginx
 
 podman generate systemd --name  ssh-proxy --new > /etc/systemd/system/container-ssh-proxy.service
 
