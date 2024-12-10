@@ -15,7 +15,7 @@ stream {
     # Proxy SSH traffic from port 2222 to port 22 (local SSH server)
     server {
         listen 2222;
-        proxy_pass 10.26.0.3:22;
+        proxy_pass 10.26.0.3:2022;
     }
 
     # Optional: Proxy other TCP services, such as MySQL (if needed)
@@ -88,7 +88,7 @@ Description=vnt Service
 After=network.target
 
 [Service]
-ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH -n "$1" -k "$2" ${3:+-w "$3"}'
+ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH --mapping tcp:0.0.0.0:2022-127.0.0.1:22 -n "$1" -k "$2" ${3:+-w "$3"}'
 Restart=always
 User=root
 
