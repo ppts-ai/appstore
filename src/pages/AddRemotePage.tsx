@@ -23,6 +23,7 @@ type ParsedObject = {
 const formSchema = z.object({
   name: z.coerce.string(),
   username: z.coerce.string(),
+  password: z.coerce.string(),
   host: z.coerce.string(),
   key: z.coerce.string(),
 })
@@ -54,27 +55,40 @@ const AddRemotePage = () => {
     defaultValues: {
       name: 'remote',
       username: 'core',
+      password: '',
       host: '',
       key: ''
     },
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const file = await create(`.local/share/containers/podman/machine/env-${values.name}`, { baseDir: BaseDirectory.Home });
-    await file.write(new TextEncoder().encode(atob(values.key)));
-    await file.close();
-    const home = await path.homeDir();
-    // create pod to forward port number for the uri
-    addEnv({
-      name: values.name,
-      host: values.host,
-      uri: `ssh://${values.username}@127.0.0.1:2222`,
-      identity: `${home}/.local/share/containers/podman/machine/env-${values.name}`,
-      isDefault: false,
-      readWrite: true
-    }).then(()=>{
-      navigate("/");
-  })
+    if(values.key === "") {
+      addEnv({
+        name: values.name,
+        host: values.host,
+        uri: `ssh://${values.username}:${values.password}@127.0.0.1:2222`,
+        isDefault: false,
+        readWrite: true
+      }).then(()=>{
+        navigate("/");
+      })
+    }else {
+      const file = await create(`.local/share/containers/podman/machine/env-${values.name}`, { baseDir: BaseDirectory.Home });
+      await file.write(new TextEncoder().encode(atob(values.key)));
+      await file.close();
+      const home = await path.homeDir();
+      // create pod to forward port number for the uri
+      addEnv({
+        name: values.name,
+        host: values.host,
+        uri: `ssh://${values.username}@127.0.0.1:2222`,
+        identity: `${home}/.local/share/containers/podman/machine/env-${values.name}`,
+        isDefault: false,
+        readWrite: true
+      }).then(()=>{
+        navigate("/");
+      })
+    }
   }
 
     // Save the locale to localStorage on change
@@ -123,6 +137,23 @@ const AddRemotePage = () => {
               </FormControl>
               <FormDescription>
               设置该应用可以使用的内存容量.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+<FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-4" >
+              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">密码</FormLabel>
+              <FormControl className="flex w-full  rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                <input type="password" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="xxxx" {...field} />
+              </FormControl>
+              <FormDescription>
+              
               </FormDescription>
               <FormMessage />
             </FormItem>

@@ -53,7 +53,7 @@ export type Environment  = {
   name: string;
   uri: string;
   host?: string;
-  identity: string;
+  identity?: string;
   isDefault: boolean;
   readWrite: boolean;
 }
@@ -123,8 +123,12 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     }else {
 
     }
-    const result = await Command.sidecar('bin/podman', ["system","connection","add","--identity",value.identity,value.name,value.uri]).execute();
-
+    let result;
+    if(value.identity) {
+      result = await Command.sidecar('bin/podman', ["system","connection","add","--identity",value.identity,value.name,value.uri]).execute();
+    }else {
+      result = await Command.sidecar('bin/podman', ["system","connection","add",value.name,value.uri]).execute();
+    }
     if(result.code  === 0 ) {
       console.log(result.stdout);
       refreshEnv();

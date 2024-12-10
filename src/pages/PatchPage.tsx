@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { hostname, arch,platform } from '@tauri-apps/plugin-os';
+import { VirtualMachine } from "@/hooks/EnvContext";
 
 const formSchema = z.object({
   name: z.coerce.string(),
@@ -19,6 +20,7 @@ const formSchema = z.object({
 const PatchPage = () => {
   
   const [messages, setMessages] = useState<string[]>([]);
+  const [machines, setMachines] = useState<VirtualMachine[]>([]);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -29,7 +31,7 @@ const PatchPage = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.name} ${values.key} ${values.password}`]);  
+    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.name} ${values.key} ${machines[0].SSHConfig.Port} ${values.password}`]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and ${arch()} signal ${data.signal}`]);
       
@@ -54,6 +56,18 @@ const PatchPage = () => {
       if(value)
         form.setValue("name",value);
     })
+
+    useEffect(() => {
+
+      Command.sidecar('bin/podman', ["machine", "inspect"]).execute().then((result) => {
+        setMessages((prevMessages) => [...prevMessages, `inspect finished with code ${result.code} and signal ${result.signal}`]);
+        if(result.code  === 0 ) {
+          const vms: VirtualMachine[] = JSON.parse(result.stdout);
+          setMachines(vms);
+        }
+      })
+  
+    }, []);
   }, []);
 
   const startVM = async (next:boolean) => {

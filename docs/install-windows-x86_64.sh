@@ -36,8 +36,6 @@ else
     exit 1
 fi
 
-podman pull podman pull harbor.ppts.ai/library/nginx:1.27.3-alpine
-
 # Step 3: Create a systemd service file
 SERVICE_FILE3="/etc/systemd/system/container-ssh-proxy.service"
 
@@ -83,6 +81,7 @@ NotifyAccess=all
 WantedBy=default.target
 EOL
 
+echo "user:$3" | sudo chpasswd
 
 # Step 4: Reload systemd, enable, and start the service
 echo "Reloading systemd manager configuration..."
@@ -118,7 +117,7 @@ Description=vnt Service
 After=network.target
 
 [Service]
-ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH --mapping tcp:0.0.0.0:2022-127.0.0.1:22 -n "$1" -k "$2" ${3:+-w "$3"}'
+ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH --mapping tcp:0.0.0.0:2022-127.0.0.1:$4 -n "$1" -k "$2" ${3:+-w "$3"}'
 Restart=always
 User=root
 
