@@ -44,9 +44,9 @@ podman run -d \
     -p 2222:2222 \
     -p 7376:7376 \
     -v /etc/podman/nginx.conf:/etc/nginx/nginx.conf \
-    nginx
+    harbor.ppts.ai/library/nginx:1.27.3-alpine
 
-podman run -d -p 1080:1080 xkuma/socks5
+podman run -d -p 1080:1080 harbor.ppts.ai/xkuma/socks5
 
 podman generate systemd --name  ssh-proxy --new > /etc/systemd/system/container-ssh-proxy.service
 podman generate systemd --name  socks5-proxy --new > /etc/systemd/system/container-socks5-proxy.service
