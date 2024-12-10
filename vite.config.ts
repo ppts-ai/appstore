@@ -21,9 +21,6 @@ export default defineConfig(async () => ({
     }),
     nodePolyfills()
   ],
-  build: {
-    sourcemap: true
-  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
