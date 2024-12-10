@@ -14,7 +14,6 @@ import LoadingPage from "./pages/LoadingPage";
 import IntroPage from "./pages/IntroPage";
 import ShellPage from "./pages/ShellPage";
 import BLEPage from "./pages/BLEPage";
-import SetupRemotePage from "./pages/SetupRemotePage";
 import AddRemotePage from "./pages/AddRemotePage";
 import { EnvProvider } from "./hooks/EnvContext";
 
@@ -72,7 +71,6 @@ const AppWithLocale = () => {
             <Route path="init" element={<InitalizePage />} />
             <Route path="ble" element={<BLEPage />} />
             <Route path="shell" element={<ShellPage />} />
-            <Route path="setupRemote" element={<SetupRemotePage />} />
             <Route path="addRemote" element={<AddRemotePage />} />
             <Route path="patch" element={<PatchPage />} />
             <Route path="app" element={<AppPage />} />

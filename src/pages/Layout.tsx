@@ -3,7 +3,6 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 
 import { Environment, useEnv } from "@/hooks/EnvContext";
 import { Button } from "@/components/ui/button";
-import { invoke } from "@tauri-apps/api/core";
 
 
 
@@ -12,7 +11,7 @@ function classNames(...classes: any[]) {
 }
 
 const Layout = () => {
-  const { env, envs, setEnv, getEnv } = useEnv();
+  const { env, envs, setEnv } = useEnv();
   const navigate = useNavigate();
   return (
 

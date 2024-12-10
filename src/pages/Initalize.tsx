@@ -9,7 +9,7 @@ import { platform } from '@tauri-apps/plugin-os';
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import * as path from '@tauri-apps/api/path';
-import { EnvType, useEnv, VirtualMachine } from "@/hooks/EnvContext";
+import {  useEnv } from "@/hooks/EnvContext";
 
 
  

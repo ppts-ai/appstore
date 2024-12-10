@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useEffect, useState } from "react";
-import { EnvType, useEnv } from "@/hooks/EnvContext";
+import { useEnv } from "@/hooks/EnvContext";
 import { Command } from "@tauri-apps/plugin-shell";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";

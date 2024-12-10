@@ -148,7 +148,7 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     }
     return null;
   }
-  const removeEnv = (value: string) => {
+  const removeEnv = () => {
 
   }
 

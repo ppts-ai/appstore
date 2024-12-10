@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Command } from '@tauri-apps/plugin-shell';
-import { EnvType, useEnv } from "@/hooks/EnvContext";
+import { useEnv } from "@/hooks/EnvContext";
 import { platform } from '@tauri-apps/plugin-os';
 import { Link } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ const LoadingPage = () => {
   const runningRef = useRef(false);
   const foundRef = useRef(false);
   const navigate = useNavigate();
-  const { env, envs, getEnv } = useEnv();
+  const { env, envs } = useEnv();
   const currentPlatform = platform();
 
   const startVM = async () => {
