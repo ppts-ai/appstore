@@ -14,13 +14,18 @@ stream {
     # Proxy SSH traffic from port 2222 to port 22 (local SSH server)
     server {
         listen 2222;
-        proxy_pass 10.26.0.3:22;
+        proxy_pass 10.26.0.3:2022;
+    }
+
+    server {
+        listen 2022;
+        proxy_pass localhost:22;
     }
 
     # Optional: Proxy other TCP services, such as MySQL (if needed)
     server {
          listen 1082;
-         proxy_pass localhost:1080;
+         proxy_pass 10.26.0.3:1080;
      }
 }
 EOF
