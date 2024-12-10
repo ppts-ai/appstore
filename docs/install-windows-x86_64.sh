@@ -47,6 +47,7 @@ podman run -d \
     --rm \
     --name ssh-proxy \
     -p 2222:2222 \
+    -p 2022:2022 \
     -p 7376:7376 \
     -v /etc/podman/nginx.conf:/etc/nginx/nginx.conf \
     harbor.ppts.ai/library/nginx:1.27.3-alpine
