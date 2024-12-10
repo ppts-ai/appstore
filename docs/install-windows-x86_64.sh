@@ -14,12 +14,7 @@ stream {
     # Proxy SSH traffic from port 2222 to port 22 (local SSH server)
     server {
         listen 2222;
-        proxy_pass 10.26.0.3:2022;
-    }
-
-    server {
-        listen 2022;
-        proxy_pass localhost:22;
+        proxy_pass 10.26.0.3:8080;
     }
 
     # Optional: Proxy other TCP services, such as MySQL (if needed)
@@ -152,15 +147,38 @@ Environment=MOUNT_PATH=/mnt/models
 WantedBy=multi-user.target
 EOL
 
+SERVICE_FILE="/etc/systemd/system/podman.service"
+echo "Creating systemd service file at $SERVICE_FILE2"
+cat <<EOL > "$SERVICE_FILE2"
+[Unit]
+Description=Podman API Service
+Documentation=man:podman-system-service(1)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/podman system service --time=0 --log-level=info --listen=tcp://0.0.0.0:8080
+Restart=on-failure
+KillMode=process
+Type=simple
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+
 # Step 4: Reload systemd, enable, and start the service
 echo "Reloading systemd manager configuration..."
 systemctl daemon-reload
 
 echo "Enabling juicefs service to start on boot..."
 systemctl enable juicefs
+systemctl enable podman
 
 echo "Starting juicefs service..."
 systemctl start juicefs
+systemctl start podman
 
 echo "Service juicefs setup completed."
 
