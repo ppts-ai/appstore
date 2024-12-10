@@ -1,5 +1,70 @@
 #!/bin/bash
 
+
+# Define the Nginx configuration path
+NGINX_CONF_PATH="/etc/podman/nginx.conf"
+
+# Ensure the directory exists
+mkdir -p /etc/podman
+
+# Create the Nginx configuration file
+cat <<EOF > "$NGINX_CONF_PATH"
+events {}
+
+stream {
+    # Proxy SSH traffic from port 2222 to port 22 (local SSH server)
+    server {
+        listen 2222;
+        proxy_pass 10.26.0.3:22;
+    }
+
+    # Optional: Proxy other TCP services, such as MySQL (if needed)
+    server {
+         listen 1082;
+         proxy_pass localhost:1080;
+     }
+}
+EOF
+
+# Set appropriate permissions for the Nginx configuration file
+chmod 644 "$NGINX_CONF_PATH"
+
+# Confirm the file was created
+if [[ -f "$NGINX_CONF_PATH" ]]; then
+    echo "Nginx configuration created successfully at $NGINX_CONF_PATH"
+else
+    echo "Failed to create Nginx configuration at $NGINX_CONF_PATH"
+    exit 1
+fi
+
+podman pull nginx
+podman pull xkuma/socks5
+podman run -d \
+    --rm \
+    --name ssh-proxy \
+    -p 2222:2222 \
+    -p 7376:7376 \
+    -v /etc/podman/nginx.conf:/etc/nginx/nginx.conf \
+    nginx
+
+podman run -d -p 1080:1080 xkuma/socks5
+
+podman generate systemd --name  ssh-proxy --new > /etc/systemd/system/container-ssh-proxy.service
+podman generate systemd --name  socks5-proxy --new > /etc/systemd/system/container-socks5-proxy.service
+
+# Step 4: Reload systemd, enable, and start the service
+echo "Reloading systemd manager configuration..."
+systemctl daemon-reload
+
+echo "Enabling vnt service to start on boot..."
+systemctl enable container-ssh-proxy
+systemctl enable container-socks5-proxy
+
+echo "Starting vnt service..."
+systemctl start container-socks5-proxy
+systemctl start container-ssh-proxy
+
+
 if [ -n "$2" ]; then
 # Step 1: Download the executable
 echo "Downloading the executable $1"
@@ -46,3 +111,50 @@ echo "Service vnt setup completed."
 else
   echo "Service creation skipped: key is empty"
 fi
+
+
+# Step 1: Download the executable
+echo "Downloading the executable"
+EXECUTABLE_PATH="/usr/local/bin/juicefs"
+curl -L -o "$EXECUTABLE_PATH" "https://ppts-ai.github.io/juicefs/juicefs-x86_64"
+if [[ $? -ne 0 ]]; then
+    echo "Failed to download juicefs executable. Exiting."
+    exit 1
+fi
+
+# Step 2: Make the executable file executable
+chmod +x "$EXECUTABLE_PATH"
+
+# Step 3: Create a systemd service file
+SERVICE_FILE="/etc/systemd/system/juicefs.service"
+
+echo "Creating systemd service file at $SERVICE_FILE"
+cat <<EOL > "$SERVICE_FILE"
+[Unit]
+Description=JuiceFS Service
+After=network.target
+
+[Service]
+ExecStart=$EXECUTABLE_PATH
+Restart=always
+User=root
+Environment=APP=ai.ppts.appstore
+Environment=REGION=asia
+Environment=DB_PATH=/etc/models.db
+Environment=MOUNT_PATH=/mnt/models
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+# Step 4: Reload systemd, enable, and start the service
+echo "Reloading systemd manager configuration..."
+systemctl daemon-reload
+
+echo "Enabling juicefs service to start on boot..."
+systemctl enable juicefs
+
+echo "Starting juicefs service..."
+systemctl start juicefs
+
+echo "Service juicefs setup completed."
