@@ -19,10 +19,10 @@ stream {
     }
 
     # Optional: Proxy other TCP services, such as MySQL (if needed)
-    # server {
-    #     listen 3306;
-    #     proxy_pass localhost:3306;
-    # }
+    server {
+         listen 1082;
+         proxy_pass localhost:1080;
+     }
 }
 EOF
 
@@ -38,6 +38,7 @@ else
 fi
 
 podman pull nginx
+podman pull xkuma/socks5
 podman run -d \
     --rm \
     --name ssh-proxy \
@@ -46,7 +47,10 @@ podman run -d \
     -v /etc/podman/nginx.conf:/etc/nginx/nginx.conf \
     nginx
 
+podman run -d -p 1080:1080 xkuma/socks5
+
 podman generate systemd --name  ssh-proxy --new > /etc/systemd/system/container-ssh-proxy.service
+podman generate systemd --name  socks5-proxy --new > /etc/systemd/system/container-socks5-proxy.service
 
 # Step 4: Reload systemd, enable, and start the service
 echo "Reloading systemd manager configuration..."
@@ -54,8 +58,10 @@ systemctl daemon-reload
 
 echo "Enabling vnt service to start on boot..."
 systemctl enable container-ssh-proxy
+systemctl enable container-socks5-proxy
 
 echo "Starting vnt service..."
+systemctl start container-socks5-proxy
 systemctl start container-ssh-proxy
 
 

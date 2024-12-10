@@ -52,6 +52,7 @@ export enum EnvType { local, remote}
 export type Environment  = {
   name: string;
   uri: string;
+  host?: string;
   identity: string;
   isDefault: boolean;
   readWrite: boolean;
@@ -90,6 +91,20 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     // Save the locale to localStorage on change
   useEffect(() => {
     localStorage.setItem('env', env);
+
+    // update proxy
+    const host = localStorage.getItem(`env-${env}`);
+    if(host) {
+      // update proxy
+      console.log(host);
+      const command = `sudo sed -i 's/\\(proxy_pass \\)[^:]*:\\([0-9]*\\);/\\1${host}:\\2;/g' /etc/podman/nginx.conf`;
+
+      Command.sidecar('bin/podman', ["machine","ssh",command]).execute().then((result)=>{
+        console.log(result.stdout);
+        console.log(result.stderr);
+        console.log(result.code);
+      });
+    }
     Command.sidecar('bin/podman', ["system","connection","default",env]).execute();
   }, [env]);
 
@@ -100,7 +115,9 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
 
   const addEnv = async (value: Environment) => {
     const result = await Command.sidecar('bin/podman', ["system","connection","add","--identity",value.identity,value.name,value.uri]).execute();
-
+    if (value.host) {
+      localStorage.setItem(`env-${value.name}`,value.host);
+    }
     if(result.code  === 0 ) {
       console.log(result.stdout);
       refreshEnv();
@@ -124,6 +141,9 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
   const getEnv = async (value: string) => {
     const env1 = envs.filter((item) => item.name === value);
     if(env1.length > 0) {
+      const host = localStorage.getItem(`env-${value}`);
+      if(host)
+        env1[0].host = host;
       return env1[0];
     }
     return null;

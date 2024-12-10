@@ -59,7 +59,7 @@ const PatchPage = () => {
   }, []);
 
   const startVM = async (next:boolean) => {
-    const sidecar_command = Command.sidecar('bin/podman',["machine","start",env]);  
+    const sidecar_command = Command.sidecar('bin/podman',["machine","start"]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {

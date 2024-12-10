@@ -172,17 +172,6 @@ async fn scanBLE() -> Result<Vec<String>, String> {
     Ok(local_names)
 }
 
-
-#[tauri::command]
-async fn activateEnv(
-    app: tauri::AppHandle,
-    env: Value,
-) -> Result<(), String> {
-    println!("env: {}", env);
-    
-    Ok(())
-}
-
 #[tauri::command]
 async fn install(
     app: tauri::AppHandle,
@@ -577,7 +566,6 @@ pub fn run() {
             scanBLE,
             shareWIFI,
             install,
-            activateEnv,
             list_apps,
             open
         ])
