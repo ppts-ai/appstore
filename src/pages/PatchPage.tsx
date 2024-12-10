@@ -57,17 +57,14 @@ const PatchPage = () => {
         form.setValue("name",value);
     })
 
-    useEffect(() => {
-
-      Command.sidecar('bin/podman', ["machine", "inspect"]).execute().then((result) => {
-        setMessages((prevMessages) => [...prevMessages, `inspect finished with code ${result.code} and signal ${result.signal}`]);
-        if(result.code  === 0 ) {
-          const vms: VirtualMachine[] = JSON.parse(result.stdout);
-          setMachines(vms);
-        }
-      })
+    Command.sidecar('bin/podman', ["machine", "inspect"]).execute().then((result) => {
+      setMessages((prevMessages) => [...prevMessages, `inspect finished with code ${result.code} and signal ${result.signal}`]);
+      if(result.code  === 0 ) {
+        const vms: VirtualMachine[] = JSON.parse(result.stdout);
+        setMachines(vms);
+      }
+    })
   
-    }, []);
   }, []);
 
   const startVM = async (next:boolean) => {
