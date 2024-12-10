@@ -97,7 +97,7 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     if(host) {
       // update proxy
       console.log(host);
-      const command = `sudo sed -i 's/\\(proxy_pass \\)[^:]*:\\([0-9]*\\);/\\1${host}:\\2;/g' /etc/podman/nginx.conf`;
+      const command = `sudo sed -i 's/\\(proxy_pass \\)[^:]*:\\([0-9]*\\);/\\1${host}:\\2;/g' /etc/podman/nginx.conf && sudo systemctl restart nginx`;
 
       Command.sidecar('bin/podman', ["machine","ssh",command]).execute().then((result)=>{
         console.log(result.stdout);
