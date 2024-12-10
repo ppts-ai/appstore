@@ -119,7 +119,7 @@ Description=vnt Service
 After=network.target
 
 [Service]
-ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH --mapping tcp:0.0.0.0:2022-127.0.0.1:22 -n "$1" -k "$2" ${3:+-w "$3"}'
+ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH --mapping tcp:0.0.0.0:2022-127.0.0.1:22 -n "$1" -k "$2" ${4:+-w "$4"}'
 Restart=always
 User=root
 

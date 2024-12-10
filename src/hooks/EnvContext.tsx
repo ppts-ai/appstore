@@ -97,7 +97,7 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     if(host) {
       // update proxy
       console.log(host);
-      const command = `sudo sed -i 's/\\(proxy_pass \\)[^:]*:\\([0-9]*\\);/\\1${host}:\\2;/g' /etc/podman/nginx.conf && sudo systemctl restart container-socks5-proxy`;
+      const command = `sudo sed -i 's/\\(proxy_pass \\)[^:]*:\\([0-9]*\\);/\\1${host}:\\2;/g' /etc/podman/nginx.conf && sudo systemctl restart container-ssh-proxy`;
 
       Command.sidecar('bin/podman', ["machine","ssh",command]).execute().then((result)=>{
         console.log(result.stdout);
@@ -116,7 +116,7 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
   const addEnv = async (value: Environment) => {
     if (value.host) {
       localStorage.setItem(`env-${value.name}`,value.host);
-      const command = `sudo sed -i 's/\\(proxy_pass \\)[^:]*:\\([0-9]*\\);/\\1${value.host}:\\2;/g' /etc/podman/nginx.conf && sudo systemctl restart container-ssh-proxy && sudo systemctl restart container-socks5-proxy`;
+      const command = `sudo sed -i 's/\\(proxy_pass \\)[^:]*:\\([0-9]*\\);/\\1${value.host}:\\2;/g' /etc/podman/nginx.conf && sudo systemctl restart container-ssh-proxy`;
 
       let output = await Command.sidecar('bin/podman', ["machine","ssh",command]).execute();
       console.log(output);
