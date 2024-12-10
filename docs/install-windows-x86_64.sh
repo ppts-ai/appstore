@@ -36,8 +36,8 @@ else
     exit 1
 fi
 
-podman pull nginx
-podman pull xkuma/socks5
+podman pull harbor.ppts.ai/xkuma/socks5
+podman pull podman pull harbor.ppts.ai/library/nginx:1.27.3-alpine
 podman run -d \
     --rm \
     --name ssh-proxy \
