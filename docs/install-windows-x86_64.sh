@@ -81,8 +81,6 @@ NotifyAccess=all
 WantedBy=default.target
 EOL
 
-echo "user:$3" | sudo chpasswd
-
 # Step 4: Reload systemd, enable, and start the service
 echo "Reloading systemd manager configuration..."
 systemctl daemon-reload
