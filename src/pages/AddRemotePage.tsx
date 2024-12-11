@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { useNavigate } from "react-router-dom";
 import { create, BaseDirectory } from '@tauri-apps/plugin-fs';
 import * as path from '@tauri-apps/api/path';
-import { chmod, chmodSync, promises as fsPromises } from 'fs';
+import { chmodSync } from 'fs';
 
 
 type ParsedObject = {
