@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { useNavigate } from "react-router-dom";
 import { create, BaseDirectory } from '@tauri-apps/plugin-fs';
 import * as path from '@tauri-apps/api/path';
-import { chmodSync } from 'fs';
 
 
 type ParsedObject = {
@@ -79,13 +78,7 @@ const AddRemotePage = () => {
       await file.close();
       const home = await path.homeDir();
       const filePath = `${home}/.local/share/containers/podman/machine/env-${values.name}`;
-      // Change permissions synchronously
-      try {
-        chmodSync(filePath, 0o600);
-        console.log('Permissions changed successfully (synchronously).');
-      } catch (err) {
-        console.error(`Error changing permissions: ${(err as Error).message}`);
-      }
+
       // create pod to forward port number for the uri
       addEnv({
         name: values.name,
