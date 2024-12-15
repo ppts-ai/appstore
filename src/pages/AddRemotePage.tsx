@@ -158,9 +158,9 @@ const AddRemotePage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>蓝牙设备</SelectLabel>
+                      <SelectLabel>远程设备</SelectLabel>
                       {devices.map((item) => (
-                        <SelectItem key={item.Name} value={item.VirtualIp!}>{item.Name}({item.Status})</SelectItem>
+                        <SelectItem key={item.VirtualIp} value={item.VirtualIp!}>{item.VirtualIp}-{item.Name}({item.Status})</SelectItem>
                       ))}
                       
                     </SelectGroup>
