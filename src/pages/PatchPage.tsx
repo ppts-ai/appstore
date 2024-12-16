@@ -5,10 +5,33 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, UseFormReturn } from "react-hook-form"
 import { z } from "zod"
-import { hostname, arch,platform } from '@tauri-apps/plugin-os';
+import { arch,platform } from '@tauri-apps/plugin-os';
 import { VirtualMachine } from "@/hooks/EnvContext";
+import { generateKeyPair, marshalPrivateKey } from '@libp2p/crypto/keys';
+import { peerIdFromKeys } from '@libp2p/peer-id'
+
+
+async function generateKeyPairAndPeerId(form: UseFormReturn<{
+  name: string;
+  key: string;
+  password: string;
+}, any, undefined>) {
+  // Generate a keypair (defaults to Ed25519)
+  const keyPair = await generateKeyPair('Ed25519');
+
+  // Export private and public keys as buffers
+  const privateKey = btoa(String.fromCharCode(...marshalPrivateKey(keyPair)));
+  
+  console.log('Private Key:', privateKey)
+
+  // Convert to PeerId
+  const peerId = await peerIdFromKeys(keyPair.public.bytes, keyPair.bytes);
+  console.log('Peer ID:', peerId.toString());
+  form.setValue("name",peerId.toString());
+  form.setValue("password", privateKey);
+}
 
 const formSchema = z.object({
   name: z.coerce.string(),
@@ -25,7 +48,7 @@ const PatchPage = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      key: '',
+      key: '/ip4/64.176.227.5/tcp/4001/p2p/12D3KooWLzi9E1oaHLhWrgTPnPa3aUjNkM8vvC8nYZp1gk9RjTV1',
       password: ''
     },
   })
@@ -51,11 +74,8 @@ const PatchPage = () => {
   
   const navigate = useNavigate();
   useEffect(() => {
+    generateKeyPairAndPeerId(form).catch(console.error);
     restartVM(false)
-    hostname().then((value: string | null) => {
-      if(value)
-        form.setValue("name",value);
-    })
 
     Command.sidecar('bin/podman', ["machine", "inspect"]).execute().then((result) => {
       setMessages((prevMessages) => [...prevMessages, `inspect finished with code ${result.code} and signal ${result.signal}`]);
@@ -133,12 +153,12 @@ const PatchPage = () => {
           name="key"
           render={({ field }) => (
             <FormItem className="sm:col-span-4" >
-              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">虚拟网络唯一标识</FormLabel>
+              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">中继服务器</FormLabel>
               <FormControl className="flex w-full rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
                 <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="123456" {...field} />
               </FormControl>
               <FormDescription>
-               虚拟网络标识为空，则不创建虚拟网络
+     
               </FormDescription>
               <FormMessage />
             </FormItem>

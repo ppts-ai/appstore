@@ -10,7 +10,7 @@ mkdir -p /etc/libp2p
 # Create the Nginx configuration file
 cat <<EOF > "$LIBP2P_CONF_PATH"
 peer_key: "$4"
-ssh_server: 127.0.0.1:$3
+ssh_server: 127.0.0.1:22
 network:
   enable_nat: true
   listen_addrs:
