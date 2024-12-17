@@ -116,13 +116,14 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
   const addEnv = async (value: Environment) => {
     if (value.host) {
       localStorage.setItem(`env-${value.name}`,value.host);
-      const command = `sudo sed -i 's/\\(proxy_pass \\)[^:]*:\\([0-9]*\\);/\\1${value.host}:\\2;/g' /etc/podman/nginx.conf && sudo systemctl restart container-ssh-proxy`;
-
-      let output = await Command.sidecar('bin/podman', ["machine","ssh",command]).execute();
-      console.log(output);
-    }else {
-
+      
+      const sidecar_command = Command.sidecar('bin/libp2p-proxy', ["-peer",`/ip4/64.176.227.5/tcp/4001/p2p/12D3KooWLzi9E1oaHLhWrgTPnPa3aUjNkM8vvC8nYZp1gk9RjTV1/p2p-circuit/p2p/${value.host}`]);
+    
+      sidecar_command.stdout.on('data', line => console.log(line.replace(/\x00/g, '')));
+      sidecar_command.stderr.on('data', line => console.log(line.replace(/\x00/g, '')));
+      sidecar_command.spawn();
     }
+    await new Promise(resolve => setTimeout(resolve, 20000));
     let result;
     if(value.identity) {
       result = await Command.sidecar('bin/podman', ["system","connection","add","--identity",value.identity,value.name,value.uri]).execute();
