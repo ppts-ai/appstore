@@ -32,6 +32,11 @@
         },
         {
           "args": true,
+          "name": "bin/libp2p-proxy",
+          "sidecar": true
+        },
+        {
+          "args": true,
           "name": "bin/podman-compose",
           "sidecar": true
         },
@@ -48,6 +53,11 @@
         {
           "args": true,
           "name": "bin/podman",
+          "sidecar": true
+        },
+        {
+          "args": true,
+          "name": "bin/libp2p-proxy",
           "sidecar": true
         },
         {

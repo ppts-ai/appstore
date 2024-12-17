@@ -9,8 +9,6 @@ import { useForm, UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 import { arch,platform } from '@tauri-apps/plugin-os';
 import { VirtualMachine } from "@/hooks/EnvContext";
-import { generateKeyPair, marshalPrivateKey } from '@libp2p/crypto/keys';
-import { peerIdFromKeys } from '@libp2p/peer-id'
 
 
 async function generateKeyPairAndPeerId(form: UseFormReturn<{
@@ -19,18 +17,18 @@ async function generateKeyPairAndPeerId(form: UseFormReturn<{
   password: string;
 }, any, undefined>) {
   // Generate a keypair (defaults to Ed25519)
-  const keyPair = await generateKeyPair('Ed25519');
+  Command.sidecar('bin/libp2p-proxy', ["-key"]).execute().then((result)=>{
+    console.log(result.stdout);
+    console.log(result.stderr);
+    console.log(result.code);
+    const privateKeyMatch = result.stdout.match(/Private Peer Key:\s*(\S+)/);
+    const publicPeerIdMatch = result.stdout.match(/Public Peer ID:\s*(\S+)/);
 
-  // Export private and public keys as buffers
-  const privateKey = btoa(String.fromCharCode(...marshalPrivateKey(keyPair)));
-  
-  console.log('Private Key:', privateKey)
-
-  // Convert to PeerId
-  const peerId = await peerIdFromKeys(keyPair.public.bytes, keyPair.bytes);
-  console.log('Peer ID:', peerId.toString());
-  form.setValue("name",peerId.toString());
-  form.setValue("password", privateKey);
+    if (privateKeyMatch && publicPeerIdMatch) {
+      form.setValue("name",publicPeerIdMatch[1]);
+      form.setValue("password", privateKeyMatch[1]);
+    }
+  });
 }
 
 const formSchema = z.object({
