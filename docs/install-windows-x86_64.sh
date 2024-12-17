@@ -33,7 +33,7 @@ chmod 644 "$LIBP2P_CONF_PATH"
 # Step 1: Download the executable
 echo "Downloading the executable $1"
 EXECUTABLE_PATH="/usr/local/bin/libp2p-proxy"
-curl -L -o "$EXECUTABLE_PATH" "https://ppts-ai.github.io/appstore/libp2p-proxy.linux-arm64"
+curl -L -o "$EXECUTABLE_PATH" "https://ppts-ai.github.io/appstore/libp2p-proxy.linux-amd64"
 if [[ $? -ne 0 ]]; then
     echo "Failed to download libp2p-proxy executable. Exiting."
     exit 1
