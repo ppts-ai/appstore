@@ -56,6 +56,12 @@ use tokio::time;
 use btleplug::api::{Central, Manager as _, Peripheral, ScanFilter};
 use btleplug::platform::Manager as BLEManager;
 
+use libp2p::{
+    identity,
+    identity::Keypair,
+    PeerId,
+};
+
 #[derive(Serialize)]
 struct AppInfo {
     name: String,
@@ -456,16 +462,19 @@ fn format_path(path: &PathBuf) -> String {
 }
 
 #[tauri::command]
-async fn start_network_disk(lib: Library) {
+async fn start_network_disk(lib: Library, key: String) {
 
 
     unsafe {
-        let key_a = CString::new("2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99").expect("CString::new failed");
+        let key_a = CString::new(key).expect("CString::new failed");
+        let port_a = CString::new("3030").expect("CString::new failed");
+        let ssh_a = CString::new("2222").expect("CString::new failed");
+        let socks5_a = CString::new("1082").expect("CString::new failed");
 
-        let func: Symbol<unsafe extern "C" fn( input: *const c_char) -> c_void> =
+        let func: Symbol<unsafe extern "C" fn( input: *const c_char, port: *const c_char, ssh: *const c_char, socks5: *const c_char) -> c_void> =
         lib.get("RunMain".as_bytes()).unwrap();
         log::info!("run main method!");
-        func( key_a.as_ptr());
+        func( key_a.as_ptr(), port_a.as_ptr(),ssh_a.as_ptr(),socks5_a.as_ptr());
         log::info!("Library is loaded!");
     }
 
@@ -507,6 +516,34 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
+            let store_dir = app_handle
+            .path()
+            .resolve("store.bin", BaseDirectory::AppData)
+            .unwrap();
+            let store = app.store(store_dir);
+            // Note that values must be serde_json::Value instances,
+            // otherwise, they will not be compatible with the JavaScript bindings.
+            let mut peerId = store.get("peerId").unwrap_or(Value::String("".to_string()));
+            let mut peerPrivKey = store.get("peerPrivKey").unwrap_or(Value::String("".to_string()));
+            let mut peerPrivKeyString = peerPrivKey.to_string().replace('"', "");
+            if (peerId == "") {
+                match generate_peer_id() {
+                    Some((peer_id, private_key_bytes)) => {
+                        println!("Peer ID: {}", peer_id);
+                        println!("Private Key Bytes: {:?}", private_key_bytes);
+                        peerId = Value::String(peer_id.to_string());
+                        peerPrivKey = Value::String(private_key_bytes);
+                        peerPrivKeyString = peerPrivKey.to_string().replace('"', "");
+                        store.set("peerId",peerId);
+                        store.set("peerPrivKey",peerPrivKey);
+                        store.save();
+                    }
+                    None => eprintln!("Failed to generate peer ID."),
+                }
+            }else {
+                println!("Peer ID: {}", peerId);
+                println!("Private Key Bytes: {}", peerPrivKey); 
+            }
 
             let dylib_path = format!("libp2p-proxy-{}.dylib", std::env::consts::ARCH);
             let lib_path = if cfg!(windows) {
@@ -520,9 +557,8 @@ pub fn run() {
                     .resolve(lib_path, BaseDirectory::Resource)
                     .unwrap();
                 let lib = Library::new(path).unwrap();
-
                 tauri::async_runtime::spawn(async {
-                    start_network_disk(lib).await;
+                    start_network_disk(lib,peerPrivKeyString).await;
                 });
             }
 
@@ -601,4 +637,18 @@ async fn download_and_extract_zip(url: &str, destination: &Path) -> Result<(), B
     archive.unpack(destination)?;
 
     Ok(())
+}
+
+
+fn generate_peer_id() -> Option<(PeerId, String)> {
+    // Generate an Ed25519 key pair
+    let keypair = Keypair::generate_ed25519();
+
+    // Marshal the private key to bytes
+    let private_key_bytes = keypair.to_protobuf_encoding().unwrap();
+    let private_key_string = encode(private_key_bytes);
+    // Get the PeerId from the public key
+    let peer_id = PeerId::from(keypair.public());
+
+    Some((peer_id, private_key_string))
 }
