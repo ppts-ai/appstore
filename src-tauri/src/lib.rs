@@ -331,13 +331,14 @@ fn replace_alias(command: &str) -> &str {
 #[tauri::command]
 async fn open(app: tauri::AppHandle, config_str: &str) -> Result<(), String> {
     match serde_json::from_str::<AppConfig>(config_str) {
-        Ok(config) => {
+        Ok(mut config) => {
             println!("Deserialized config: {:?}", config);
             let url = config.open_url.unwrap();
             let profile_dir = app
             .path()
             .resolve("user_data", BaseDirectory::Data)
             .unwrap();
+            config.open_proxy = Some("localhost:1082".to_string());
             if let Some(open_proxy) = config.open_proxy {
                 println!("has proxy configured");
                 if cfg!(target_os = "windows") {
