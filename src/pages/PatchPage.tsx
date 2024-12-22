@@ -3,33 +3,15 @@ import { Command } from '@tauri-apps/plugin-shell';
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, UseFormReturn } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { arch,platform } from '@tauri-apps/plugin-os';
 import { VirtualMachine } from "@/hooks/EnvContext";
 
 
-async function generateKeyPairAndPeerId(form: UseFormReturn<{
-  name: string;
-  key: string;
-  password: string;
-}, any, undefined>) {
-  // Generate a keypair (defaults to Ed25519)
-  Command.sidecar('bin/libp2p-proxy', ["-key"]).execute().then((result)=>{
-    console.log(result.stdout);
-    console.log(result.stderr);
-    console.log(result.code);
-    const privateKeyMatch = result.stdout.match(/Private Peer Key:\s*(\S+)/);
-    const publicPeerIdMatch = result.stdout.match(/Public Peer ID:\s*(\S+)/);
 
-    if (privateKeyMatch && publicPeerIdMatch) {
-      form.setValue("name",publicPeerIdMatch[1]);
-      form.setValue("password", privateKeyMatch[1]);
-    }
-  });
-}
 
 const formSchema = z.object({
   name: z.coerce.string(),
