@@ -52,7 +52,7 @@ const PatchPage = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.name} ${values.key} ${machines[0].SSHConfig.Port} ${values.password}`]);  
+    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh`]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and ${arch()} signal ${data.signal}`]);
       
@@ -72,16 +72,9 @@ const PatchPage = () => {
   
   const navigate = useNavigate();
   useEffect(() => {
-    generateKeyPairAndPeerId(form).catch(console.error);
-    restartVM(false)
-
-    Command.sidecar('bin/podman', ["machine", "inspect"]).execute().then((result) => {
-      setMessages((prevMessages) => [...prevMessages, `inspect finished with code ${result.code} and signal ${result.signal}`]);
-      if(result.code  === 0 ) {
-        const vms: VirtualMachine[] = JSON.parse(result.stdout);
-        setMachines(vms);
-      }
-    })
+    //generateKeyPairAndPeerId(form).catch(console.error);
+    //restartVM(false)
+    startVM(false);
   
   }, []);
 
@@ -129,56 +122,7 @@ const PatchPage = () => {
       <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-7xl sm:px-6 lg:px-8">
 
-      <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem className="sm:col-span-4" >
-              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">虚拟网络中的机器名</FormLabel>
-              <FormControl className="flex w-full rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="username@host" {...field} />
-              </FormControl>
-              <FormDescription>
-                
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <FormField
-          control={form.control}
-          name="key"
-          render={({ field }) => (
-            <FormItem className="sm:col-span-4" >
-              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">中继服务器</FormLabel>
-              <FormControl className="flex w-full rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="123456" {...field} />
-              </FormControl>
-              <FormDescription>
-     
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem className="sm:col-span-4" >
-              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">虚拟网络密码</FormLabel>
-              <FormControl className="flex w-full  rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                <input type="password" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="xxxx" {...field} />
-              </FormControl>
-              <FormDescription>
-              
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
 
         <Button disabled={!started} type="submit">提交</Button>

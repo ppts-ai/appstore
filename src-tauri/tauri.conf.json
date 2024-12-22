@@ -42,6 +42,7 @@
       "bin/podman-mac-helper"
     ],
     "resources": [
+      "JUICEFS_LIB",
       "libs"
     ]
   },

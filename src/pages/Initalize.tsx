@@ -58,8 +58,12 @@ const InitalizePage = () => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and signal ${data.signal}`]);
       if(data.code === 0 || data.code === 125) {
         // save init status
-
-        refreshEnv().then(()=>navigate("/patch"));
+        if (currentPlatform == "windows") {
+          refreshEnv().then(()=>navigate("/patch"));
+        }else {
+          refreshEnv().then(()=>navigate("/"));
+        }
+        
        
       }
     });

@@ -456,24 +456,17 @@ fn format_path(path: &PathBuf) -> String {
 }
 
 #[tauri::command]
-async fn start_network_disk(models_path: PathBuf, mount_path: String, models_data_path: PathBuf, lib: Library) {
-    if !models_data_path.exists() {
-        fs::copy(&models_path, &models_data_path);
-    }
-    log::info!("run main method! {:?}",format_path(&models_data_path));
-    log::info!("run main method! {:?}",mount_path);
+async fn start_network_disk(lib: Library) {
 
-    log::info!("Tauri is awesome!");
+
     unsafe {
-        let path_a = CString::new(format_path(&models_data_path)).expect("CString::new failed");
         let key_a = CString::new("2DD29CA851E7B56E4697B0E1F08507293D761A05CE4D1B628663F411A8086D99").expect("CString::new failed");
-        let mount_a = CString::new(mount_path).expect("CString::new failed");
-        let func: Symbol<unsafe extern "C" fn(path: *const c_char, key: *const c_char, mount: *const c_char) -> *const c_char> =
+
+        let func: Symbol<unsafe extern "C" fn( input: *const c_char) -> c_void> =
         lib.get("RunMain".as_bytes()).unwrap();
         log::info!("run main method!");
-        let port = func(path_a.as_ptr(), key_a.as_ptr(), mount_a.as_ptr());
-        let c_str = CStr::from_ptr(port);
-        log::info!("Library is loaded! {}",c_str.to_str().unwrap());
+        func( key_a.as_ptr());
+        log::info!("Library is loaded!");
     }
 
 
@@ -514,7 +507,24 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
-            env::set_var("MODELS", "/mnt/models");
+
+            let dylib_path = format!("libp2p-proxy-{}.dylib", std::env::consts::ARCH);
+            let lib_path = if cfg!(windows) {
+                    "p2p-proxy.dll"
+                } else  {
+                    dylib_path.as_str()
+                };
+            unsafe {
+                let path = app_handle
+                    .path()
+                    .resolve(lib_path, BaseDirectory::Resource)
+                    .unwrap();
+                let lib = Library::new(path).unwrap();
+
+                tauri::async_runtime::spawn(async {
+                    start_network_disk(lib).await;
+                });
+            }
 
             create_containers_conf(app.handle())?;
             create_env_file(app.handle())?;
