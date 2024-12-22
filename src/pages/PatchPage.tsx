@@ -8,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { arch,platform } from '@tauri-apps/plugin-os';
-import { VirtualMachine } from "@/hooks/EnvContext";
 
 
 
