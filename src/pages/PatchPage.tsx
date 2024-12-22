@@ -32,6 +32,7 @@ const PatchPage = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log(values)
     const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh`]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and ${arch()} signal ${data.signal}`]);
