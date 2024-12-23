@@ -338,7 +338,7 @@ async fn open(app: tauri::AppHandle, config_str: &str) -> Result<(), String> {
             .path()
             .resolve("user_data", BaseDirectory::Data)
             .unwrap();
-            config.open_proxy = Some("localhost:1082".to_string());
+            config.open_proxy = Some("localhost:1083".to_string());
             if let Some(open_proxy) = config.open_proxy {
                 println!("has proxy configured");
                 if cfg!(target_os = "windows") {
@@ -463,19 +463,19 @@ fn format_path(path: &PathBuf) -> String {
 }
 
 #[tauri::command]
-async fn start_network_disk(lib: Library, key: String) {
-
+async fn start_network_disk(lib: Library, key: String, path: String) {
 
     unsafe {
         let key_a = CString::new(key).expect("CString::new failed");
         let port_a = CString::new("3030").expect("CString::new failed");
         let ssh_a = CString::new("2222").expect("CString::new failed");
-        let socks5_a = CString::new("1082").expect("CString::new failed");
+        let socks5_a = CString::new("1083").expect("CString::new failed");
+        let path_a = CString::new(path).expect("CString::new failed");
 
-        let func: Symbol<unsafe extern "C" fn( input: *const c_char, port: *const c_char, ssh: *const c_char, socks5: *const c_char) -> c_void> =
+        let func: Symbol<unsafe extern "C" fn( input: *const c_char, port: *const c_char, ssh: *const c_char, socks5: *const c_char,workdir: *const c_char) -> c_void> =
         lib.get("RunMain".as_bytes()).unwrap();
         log::info!("run main method!");
-        func( key_a.as_ptr(), port_a.as_ptr(),ssh_a.as_ptr(),socks5_a.as_ptr());
+        func( key_a.as_ptr(), port_a.as_ptr(),ssh_a.as_ptr(),socks5_a.as_ptr(),path_a.as_ptr());
         log::info!("Library is loaded!");
     }
 
@@ -557,9 +557,16 @@ pub fn run() {
                     .path()
                     .resolve(lib_path, BaseDirectory::Resource)
                     .unwrap();
+                
+                let resource_path = app_handle
+                    .path()
+                    .resolve("", BaseDirectory::Resource)
+                    .unwrap();
+                
+                let resource_path_str = resource_path.to_string_lossy().to_string();
                 let lib = Library::new(path).unwrap();
                 tauri::async_runtime::spawn(async {
-                    start_network_disk(lib,peerPrivKeyString).await;
+                    start_network_disk(lib,peerPrivKeyString,resource_path_str).await;
                 });
             }
 

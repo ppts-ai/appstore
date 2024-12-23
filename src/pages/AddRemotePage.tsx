@@ -50,7 +50,7 @@ const AddRemotePage = () => {
       const home = await path.appDataDir();
       const filePath = `${home}/env-${values.name}`;
 
-      fetch("http://localhost:3030", {
+      fetch("http://localhost:3030/peer", {
         method: 'POST', // HTTP method
         headers: {
           'Content-Type': 'application/json', // or 'application/x-www-form-urlencoded' if needed
@@ -79,7 +79,7 @@ const AddRemotePage = () => {
 
     // Save the locale to localStorage on change
     useEffect(() => {
-     fetch("http://localhost:3030").then((response)=>response.json().then((value)=>setDevices(value)))
+     fetch("http://localhost:3030/peer").then((response)=>response.json().then((value)=>setDevices(value)))
     }, []);
   
     return (

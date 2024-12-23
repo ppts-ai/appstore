@@ -97,7 +97,7 @@ export const EnvProvider = ({ children }: EnvProviderProps) => {
     if(host) {
       // update proxy
       console.log("host",host);
-      fetch("http://localhost:3030", {
+      fetch("http://localhost:3030/peer", {
         method: 'POST', // HTTP method
         headers: {
           'Content-Type': 'application/json', // or 'application/x-www-form-urlencoded' if needed
