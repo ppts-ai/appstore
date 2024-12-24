@@ -40,6 +40,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use tauri_plugin_store::StoreExt;
 
+#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
 
@@ -77,12 +78,21 @@ struct AppConfig {
 }
 
 #[tauri::command]
+#[cfg(unix)]
 async fn create_file( file_path: &str) -> Result<(), String> {
     format!("Hello! You've been greeted from Rust!");
-    if cfg!(target_os != "windows") {
-        let permissions = Permissions::from_mode(0o400); // Set permissions to 400
+    let permissions = Permissions::from_mode(0o400); // Set permissions to 400
+    fs::set_permissions(file_path, permissions);
+    Ok(())
+}
+
+#[tauri::command]
+#[cfg(windows)]
+async fn create_file( file_path: &str) -> Result<(), String> {
+
+        let permissions =  std::fs::Permissions::readonly() // Set permissions to 400
         fs::set_permissions(file_path, permissions);
-    }
+
     Ok(())
 }
 
