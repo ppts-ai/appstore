@@ -79,8 +79,10 @@ struct AppConfig {
 #[tauri::command]
 async fn create_file( file_path: &str) -> Result<(), String> {
     format!("Hello! You've been greeted from Rust!");
-    let permissions = Permissions::from_mode(0o400); // Set permissions to 400
-    fs::set_permissions(file_path, permissions);
+    if cfg!(target_os != "windows") {
+        let permissions = Permissions::from_mode(0o400); // Set permissions to 400
+        fs::set_permissions(file_path, permissions);
+    }
     Ok(())
 }
 
