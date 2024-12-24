@@ -90,9 +90,10 @@ async fn create_file( file_path: &str) -> Result<(), String> {
 #[cfg(windows)]
 async fn create_file( file_path: &str) -> Result<(), String> {
 
-        let permissions =  std::fs::Permissions::readonly(); // Set permissions to 400
-        fs::set_permissions(file_path, permissions);
-
+    let permissions = fs::Permissions::readonly(); // Set permissions to read-only
+    if let Err(e) = fs::set_permissions(file_path, permissions) {
+        return Err(format!("Failed to set file permissions: {}", e));
+    }
     Ok(())
 }
 
