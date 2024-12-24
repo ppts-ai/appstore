@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fs::read;
-use std::fs::{self, File};
+use std::fs::{self, File, Permissions};
 use std::path::Path;
 use std::sync::Mutex;
 use tauri::path::BaseDirectory;
@@ -40,6 +40,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use tauri_plugin_store::StoreExt;
 
+use std::os::unix::fs::PermissionsExt;
 
 
 use std::ffi::CString;
@@ -73,6 +74,14 @@ struct AppConfig {
     open_type: Option<String>,
     open_proxy: Option<String>,
     open_url: Option<String>,
+}
+
+#[tauri::command]
+async fn create_file( file_path: &str) -> Result<(), String> {
+    format!("Hello! You've been greeted from Rust!");
+    let permissions = Permissions::from_mode(0o400); // Set permissions to 400
+    fs::set_permissions(file_path, permissions);
+    Ok(())
 }
 
 #[tauri::command]
@@ -338,7 +347,6 @@ async fn open(app: tauri::AppHandle, config_str: &str) -> Result<(), String> {
             .path()
             .resolve("user_data", BaseDirectory::Data)
             .unwrap();
-            config.open_proxy = Some("localhost:1083".to_string());
             if let Some(open_proxy) = config.open_proxy {
                 println!("has proxy configured");
                 if cfg!(target_os = "windows") {
@@ -620,6 +628,7 @@ pub fn run() {
             scanBLE,
             shareWIFI,
             install,
+            create_file,
             list_apps,
             open
         ])

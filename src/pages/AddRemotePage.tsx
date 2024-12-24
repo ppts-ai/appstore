@@ -9,6 +9,7 @@ import { create, BaseDirectory } from '@tauri-apps/plugin-fs';
 import * as path from '@tauri-apps/api/path';
 import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { invoke } from "@tauri-apps/api/core";
 
 
 
@@ -49,7 +50,7 @@ const AddRemotePage = () => {
       await file.close();
       const home = await path.appDataDir();
       const filePath = `${home}/env-${values.name}`;
-
+      await invoke("create_file",{filePath: filePath})
       fetch("http://localhost:3030/peer", {
         method: 'POST', // HTTP method
         headers: {
