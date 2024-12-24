@@ -28,5 +28,4 @@ dist-ssr
 .sentryclirc
 src-tauri/bin/win-sshproxy-aarch64-apple-darwin
 src-tauri/bin/podman-mac-helper-aarch64-apple-darwin
-src-tauri/bin/podman-aarch64-apple-darwin
 src-tauri/bin/gvproxy-aarch64-apple-darwin
