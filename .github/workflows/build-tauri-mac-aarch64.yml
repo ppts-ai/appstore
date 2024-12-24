@@ -44,7 +44,6 @@ jobs:
         brew install podman
         brew --prefix podman  # Get the installation prefix
         PREFIX=$(brew --prefix podman)
-        cp "${PREFIX}/bin/podman" ./src-tauri/bin/podman-${{ env.TARGET }}
         cp "${PREFIX}/bin/podman-mac-helper" ./src-tauri/bin/podman-mac-helper-${{ env.TARGET }}
         cp "${PREFIX}/libexec/podman/gvproxy" ./src-tauri/bin/gvproxy-${{ env.TARGET }}
         touch ./src-tauri/bin/win-sshproxy-${{ env.TARGET }}

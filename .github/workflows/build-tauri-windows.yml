@@ -49,7 +49,6 @@ jobs:
         Write-Host "Podman is installed at: $podmanPath"
         # Find Podman location
         dir C:\ProgramData\chocolatey\lib\podman-cli\tools
-        Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.3.0\usr\bin\podman.exe" -Destination "./src-tauri/bin/podman-x86_64-pc-windows-msvc.exe"
         touch "./src-tauri/bin/podman-mac-helper-x86_64-pc-windows-msvc.exe"
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.3.0\usr\bin\gvproxy.exe" -Destination "./src-tauri/bin/gvproxy-x86_64-pc-windows-msvc.exe"
         Copy-Item -Path "C:\ProgramData\chocolatey\lib\podman-cli\tools\podman-5.3.0\usr\bin\win-sshproxy.exe" -Destination "./src-tauri/bin/win-sshproxy-x86_64-pc-windows-msvc.exe"
