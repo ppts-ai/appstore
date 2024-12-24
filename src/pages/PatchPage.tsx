@@ -51,7 +51,7 @@ const PatchPage = () => {
   
   const navigate = useNavigate();
   useEffect(() => {
-    restartVM(false)
+    startVM(false)
     hostname().then((value: string | null) => {
       if(value)
         form.setValue("name",value);
