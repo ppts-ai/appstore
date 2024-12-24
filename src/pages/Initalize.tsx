@@ -61,7 +61,7 @@ const InitalizePage = () => {
         if (currentPlatform == "windows") {
           refreshEnv().then(()=>navigate("/patch"));
         }else {
-          refreshEnv().then(()=>navigate("/"));
+          navigate("/");
         }
         
        
