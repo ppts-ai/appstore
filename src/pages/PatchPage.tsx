@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { hostname, arch,platform } from '@tauri-apps/plugin-os';
 import { useEnv } from "@/hooks/EnvContext";
+import { createStore } from '@tauri-apps/plugin-store';
 
 const formSchema = z.object({
   name: z.coerce.string(),
@@ -31,6 +32,9 @@ const PatchPage = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if( values.key && values.key !== "") {
+      createStore('store.bin').then((val) => val.set("vlan",values.key).then(() => val.save()))
+    }
     const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.name} ${values.key} ${values.password}`]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and ${arch()} signal ${data.signal}`]);

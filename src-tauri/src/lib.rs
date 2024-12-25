@@ -480,7 +480,7 @@ fn format_path(path: &PathBuf) -> String {
 }
 
 #[tauri::command]
-async fn start_network_disk(lib: Library, key: String, path: String) {
+async fn start_network_disk(lib: Library, key: String, path: String, vlan: String) {
 
     unsafe {
         let key_a = CString::new(key).expect("CString::new failed");
@@ -488,11 +488,11 @@ async fn start_network_disk(lib: Library, key: String, path: String) {
         let ssh_a = CString::new("2222").expect("CString::new failed");
         let socks5_a = CString::new("1083").expect("CString::new failed");
         let path_a = CString::new(path).expect("CString::new failed");
-
-        let func: Symbol<unsafe extern "C" fn( input: *const c_char, port: *const c_char, ssh: *const c_char, socks5: *const c_char,workdir: *const c_char) -> c_void> =
+        let vlan_a = CString::new(vlan).expect("CString::new failed");
+        let func: Symbol<unsafe extern "C" fn( input: *const c_char, port: *const c_char, ssh: *const c_char, socks5: *const c_char,workdir: *const c_char,vlan: *const c_char) -> c_void> =
         lib.get("RunMain".as_bytes()).unwrap();
         log::info!("run main method!");
-        func( key_a.as_ptr(), port_a.as_ptr(),ssh_a.as_ptr(),socks5_a.as_ptr(),path_a.as_ptr());
+        func( key_a.as_ptr(), port_a.as_ptr(),ssh_a.as_ptr(),socks5_a.as_ptr(),path_a.as_ptr(),vlan_a.as_ptr());
         log::info!("Library is loaded!");
     }
 
@@ -534,16 +534,14 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let app_handle = app.handle();
-            let store_dir = app_handle
-            .path()
-            .resolve("store.bin", BaseDirectory::AppData)
-            .unwrap();
-            let store = app.store(store_dir);
+            let store = app.store("store.bin");
             // Note that values must be serde_json::Value instances,
             // otherwise, they will not be compatible with the JavaScript bindings.
             let mut peerId = store.get("peerId").unwrap_or(Value::String("".to_string()));
+            let mut vlan = store.get("vlan").unwrap_or(Value::String("lobby".to_string()));
             let mut peerPrivKey = store.get("peerPrivKey").unwrap_or(Value::String("".to_string()));
             let mut peerPrivKeyString = peerPrivKey.to_string().replace('"', "");
+            let mut vlanStr = vlan.to_string().replace('"', "");
             if (peerId == "") {
                 match generate_peer_id() {
                     Some((peer_id, private_key_bytes)) => {
@@ -583,7 +581,7 @@ pub fn run() {
                 let resource_path_str = resource_path.to_string_lossy().to_string();
                 let lib = Library::new(path).unwrap();
                 tauri::async_runtime::spawn(async {
-                    start_network_disk(lib,peerPrivKeyString,resource_path_str).await;
+                    start_network_disk(lib,peerPrivKeyString,resource_path_str, vlanStr).await;
                 });
             }
 

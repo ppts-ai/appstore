@@ -8,6 +8,8 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Button } from '@/components/ui/button';
 import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs';
 import * as path from '@tauri-apps/api/path';
+import { createStore } from '@tauri-apps/plugin-store';
+
 
 
 const SettingsPage = () => {
@@ -16,6 +18,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { locale, setLocale } = useLocale();
   const { reset } = useEnv();
+  const [peerId, setPeerId] = useState<string>("");
 
 
   const copyFile = async (file: string) => {
@@ -76,6 +79,7 @@ const SettingsPage = () => {
         setMachines(vms);
       }
     })
+    createStore('store.bin').then((val) => val.get("peerId").then(value => setPeerId(value as string)))
 
   }, []);
   
@@ -96,7 +100,7 @@ const SettingsPage = () => {
     </Select>
           </div>
 
-
+      <div><span>peerId:</span><span>{peerId}</span></div>
           <Table>
   <TableCaption>List of virtual machines.</TableCaption>
   <TableHeader>
