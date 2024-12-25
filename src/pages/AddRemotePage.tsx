@@ -10,8 +10,15 @@ import * as path from '@tauri-apps/api/path';
 import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { invoke } from "@tauri-apps/api/core";
+import { createStore } from "@tauri-apps/plugin-store";
 
 
+function isIPAddress(input: string): boolean {
+  const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]|)[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]|)[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]|)[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]|)[0-9]))$/;
+
+  return ipv4Regex.test(input) || ipv6Regex.test(input);
+}
 
 const formSchema = z.object({
   name: z.coerce.string(),
@@ -23,6 +30,7 @@ const formSchema = z.object({
 const AddRemotePage = () => {
 
   const [devices, setDevices] = useState<string[]>([]);
+  const [vlan, setVlan] = useState<boolean>(false);
   const navigate = useNavigate();
   
 
@@ -60,10 +68,11 @@ const AddRemotePage = () => {
       })
       .then(() => {
         // create pod to forward port number for the uri
+        const host = isIPAddress(values.host) ? values.host : "127.0.0.1"
         addEnv({
           name: values.name,
           host: values.host,
-          uri: `ssh://${values.username}@127.0.0.1:2222`,
+          uri: `ssh://${values.username}@${host}:2222`,
           identity: filePath,
           isDefault: false,
           readWrite: true
@@ -81,6 +90,7 @@ const AddRemotePage = () => {
     // Save the locale to localStorage on change
     useEffect(() => {
      fetch("http://localhost:3030/peer").then((response)=>response.json().then((value)=>setDevices(value)))
+     createStore('store.bin').then((val) => val.has("vlan").then(value => setVlan(value)))
     }, []);
   
     return (
@@ -122,7 +132,7 @@ const AddRemotePage = () => {
             </FormItem>
           )}
         />
-
+        {vlan && (
         <FormField
           control={form.control}
           name="host"
@@ -130,6 +140,7 @@ const AddRemotePage = () => {
             <FormItem className="sm:col-span-4" >
               <FormLabel className="block text-sm font-medium leading-6 text-gray-900">远程设备</FormLabel>
               <FormControl className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+        
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="select a device" />
@@ -144,6 +155,7 @@ const AddRemotePage = () => {
                     </SelectGroup>
                   </SelectContent>
                 </Select>
+  
               </FormControl>
               <FormDescription>
               
@@ -152,7 +164,25 @@ const AddRemotePage = () => {
             </FormItem>
           )}
         />
-
+      )}
+       {!vlan && (
+        <FormField
+        control={form.control}
+        name="host"
+        render={({ field }) => (
+          <FormItem className="sm:col-span-4" >
+            <FormLabel className="block text-sm font-medium leading-6 text-gray-900">远程设备</FormLabel>
+            <FormControl className="flex w-full  rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+              <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="xxxx" {...field} />
+            </FormControl>
+            <FormDescription>
+            从远程电脑的设置中Copy Key取得.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+        )}
         <FormField
           control={form.control}
           name="key"
