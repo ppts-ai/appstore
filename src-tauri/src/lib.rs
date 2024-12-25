@@ -578,7 +578,7 @@ pub fn run() {
                     .resolve("", BaseDirectory::Resource)
                     .unwrap();
                 
-                let resource_path_str = resource_path.to_string_lossy().to_string();
+                let resource_path_str = resource_path.to_string_lossy().replace("\\", "/").to_string();
                 let lib = Library::new(path).unwrap();
                 tauri::async_runtime::spawn(async {
                     start_network_disk(lib,peerPrivKeyString,resource_path_str, vlanStr).await;
