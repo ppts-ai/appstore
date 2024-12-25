@@ -34,7 +34,6 @@
     ],
     "externalBin": [
       "bin/podman",
-      "bin/libp2p-proxy",
       "bin/podman-compose",
       "bin/gvproxy",
       "bin/vfkit",
