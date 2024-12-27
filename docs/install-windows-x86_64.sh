@@ -59,7 +59,8 @@ fi
 # Check the argument
 case "$2" in
     master)
-        echo "Argument is 'master'."
+        curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--advertise-address=$6 --node-ip=$6 --node-name=$3" sh -
+        sudo chown $USER /etc/rancher/k3s/k3s.yaml
         ;;
     slave)
         echo "Argument is 'slave'."

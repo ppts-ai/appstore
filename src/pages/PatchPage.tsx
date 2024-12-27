@@ -49,7 +49,7 @@ const PatchPage = () => {
       createStore('store.bin').then((val) => val.set("vlan",values.key).then(() => val.save()))
     }
     console.log("url",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.gpu} ${values.k8s} ${values.name} ${values.key} '${values.password}' ${values.ip} `)
-    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.gpu} ${values.k8s} ${values.name} ${values.key} '${values.password}' ${values.ip} `]);  
+    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.gpu} ${values.k8s} ${values.name} ${values.key} '${values.password}' ${values.ip?values.ip:''} `]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and ${arch()} signal ${data.signal}`]);
       
