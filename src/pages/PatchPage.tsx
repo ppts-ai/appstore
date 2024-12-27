@@ -10,9 +10,17 @@ import { z } from "zod"
 import { hostname, arch,platform } from '@tauri-apps/plugin-os';
 import { useEnv } from "@/hooks/EnvContext";
 import { createStore } from '@tauri-apps/plugin-store';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectValue } from "@/components/ui/select";
+import { SelectTrigger } from "@radix-ui/react-select";
 
 const formSchema = z.object({
   name: z.coerce.string(),
+  k8s: z.enum(["no","master","agent"]),
+  gpu: z.boolean(),
+  ip: z.string().ip(),
+  token: z.string(),
+  master: z.string().ip(),
   key: z.coerce.string(),
   password: z.coerce.string(),
 })
@@ -21,12 +29,19 @@ const formSchema = z.object({
 const PatchPage = () => {
   
   const [messages, setMessages] = useState<string[]>([]);
+  const [selection, setSelection] = useState<string>('no');
   const { env} = useEnv();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       key: '',
+      k8s: 'no',
+      master: '',
+      token: '',
+      ip: '',
+      gpu: false,
       password: ''
     },
   })
@@ -35,7 +50,7 @@ const PatchPage = () => {
     if( values.key && values.key !== "") {
       createStore('store.bin').then((val) => val.set("vlan",values.key).then(() => val.save()))
     }
-    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.name} ${values.key} ${values.password}`]);  
+    const sidecar_command = Command.sidecar('bin/podman',["machine","ssh",`curl https://ppts-ai.github.io/appstore/install-${platform()}-${arch()}.sh | sudo sh -s ${values.gpu} ${values.k8s} ${values.name} ${values.key} '${values.password}' ${values.ip} `]);  
     sidecar_command.on('close', data => {
       setMessages((prevMessages) => [...prevMessages, `command finished with code ${data.code} and ${arch()} signal ${data.signal}`]);
       
@@ -108,6 +123,22 @@ const PatchPage = () => {
 
       <FormField
           control={form.control}
+          name="gpu"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-4" >
+              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">安装英伟达显卡支持</FormLabel>
+              <FormControl >
+                <Checkbox onCheckedChange={field.onChange} checked={field.value} >hello</Checkbox>
+              </FormControl>
+              <FormDescription>
+                
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      <FormField
+          control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem className="sm:col-span-4" >
@@ -157,6 +188,94 @@ const PatchPage = () => {
           )}
         />
 
+      <FormField
+          control={form.control}
+          name="ip"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-4" >
+              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">虚拟网络IP</FormLabel>
+              <FormControl className="flex w-full  rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="10.26.0.xxx" {...field} />
+              </FormControl>
+              <FormDescription>
+              
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="k8s"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-4" >
+              <FormLabel className="block text-sm font-medium leading-6 text-gray-900">Kubernetes</FormLabel>
+              <FormControl className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+        
+                <Select onValueChange={(value)=>{field.onChange(value),setSelection(value)}} value={field.value}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Install Kubernetes?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Install Kubernetes</SelectLabel>
+                     
+                        <SelectItem  value="no">No</SelectItem>
+                        <SelectItem  value="master">Master</SelectItem>
+                        <SelectItem  value="agent">Agent</SelectItem>
+                     
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+  
+              </FormControl>
+              <FormDescription>
+              
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+
+        {selection === "agent" && (
+          <>
+                <FormField
+                control={form.control}
+                name="master"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-4" >
+                    <FormLabel className="block text-sm font-medium leading-6 text-gray-900">Master IP</FormLabel>
+                    <FormControl className="flex w-full  rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                      <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="10.26.0.xxx" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                    
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="token"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-4" >
+                    <FormLabel className="block text-sm font-medium leading-6 text-gray-900">Joining Token</FormLabel>
+                    <FormControl className="flex w-full  rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                      <input type="text" className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" placeholder="10.26.0.xxx" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                    
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              </>
+        )}
 
         <Button disabled={!started} type="submit">提交</Button>
       </form>

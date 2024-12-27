@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-if [ -n "$2" ]; then
+if [ -n "$4" ]; then
 # Step 1: Download the executable
 echo "Downloading the executable $1"
 EXECUTABLE_PATH="/usr/local/bin/vnt-cli"
@@ -24,7 +24,7 @@ Description=vnt Service
 After=network.target
 
 [Service]
-ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH -n "$1" -k "$2" ${3:+-w "$3"}'
+ExecStart=/bin/sh -c 'exec $EXECUTABLE_PATH -n "$3" -k "$4" ${5:+-w "$5"} ${6:+--ip "$6"}'
 Restart=always
 User=root
 
@@ -47,3 +47,21 @@ echo "Service vnt setup completed."
 else
   echo "Service creation skipped: key is empty"
 fi
+
+
+# Check the argument
+case "$2" in
+    master)
+        echo "Argument is 'master'."
+        ;;
+    slave)
+        echo "Argument is 'slave'."
+        ;;
+    no)
+        echo "Argument is 'no'."
+        ;;
+    *)
+        echo "Invalid argument. Please use 'master', 'slave', or 'no'."
+        exit 1
+        ;;
+esac
